@@ -21,7 +21,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
+
+    /**
+     * Check if the user is an owner.
+     */
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    /**
+     * Check if the user is a developer.
+     */
+    public function isDeveloper(): bool
+    {
+        return $this->role === 'developer';
+    }
 
     /**
      * The attributes that should be hidden for serialization.
