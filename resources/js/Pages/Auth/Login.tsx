@@ -102,7 +102,7 @@ export default function Login({
                         </div>
 
                         <div className="flex items-center justify-end mt-4">
-                            <Button className="w-full" disabled={processing}>
+                            <Button type="submit" className="w-full" disabled={processing}>
                                 Log in
                             </Button>
                         </div>
