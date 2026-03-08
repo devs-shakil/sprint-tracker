@@ -8,8 +8,8 @@ test('login screen can be rendered', function () {
     $response->assertStatus(200);
 });
 
-test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+test('users with owner role are redirected to dashboard', function () {
+    $user = User::factory()->create(['role' => 'owner']);
 
     $response = $this->post('/login', [
         'email' => $user->email,
@@ -18,6 +18,18 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('users with developer role are redirected to my-tasks', function () {
+    $user = User::factory()->create(['role' => 'developer']);
+
+    $response = $this->post('/login', [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('my-tasks', absolute: false));
 });
 
 test('users can not authenticate with invalid password', function () {
