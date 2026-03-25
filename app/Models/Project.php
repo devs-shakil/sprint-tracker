@@ -33,4 +33,14 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_members');
     }
+
+    public function workingDays()
+    {
+        return $this->hasMany(WorkingDay::class);
+    }
+
+    public function sprints()
+    {
+        return $this->hasMany(Sprint::class);
+    }
 }

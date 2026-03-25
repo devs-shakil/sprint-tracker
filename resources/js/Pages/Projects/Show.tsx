@@ -1,5 +1,5 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
@@ -24,6 +24,18 @@ interface Member {
     segment?: Segment;
 }
 
+interface WorkingDay {
+    id: number;
+    date: string;
+}
+
+interface Sprint {
+    id: number;
+    sprint_number: number;
+    start_date: string;
+    end_date: string;
+}
+
 interface Project {
     id: number;
     name: string;
@@ -32,6 +44,8 @@ interface Project {
     status: string;
     segments: Segment[];
     members: Member[];
+    working_days: WorkingDay[];
+    sprints: Sprint[];
 }
 
 interface Props {
@@ -91,14 +105,35 @@ export default function Show({ project, developers, can }: Props) {
                                 <CardDescription>Project timelines and segments.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="flex items-center gap-6">
-                                    <div className="flex items-center text-sm">
-                                        <Calendar className="mr-2 h-4 w-4 text-muted-foreground" />
-                                        <span>{project.start_date} to {project.end_date}</span>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-muted-foreground flex items-center gap-1">
+                                            <Calendar className="h-3 w-3" /> Duration
+                                        </Label>
+                                        <div className="text-sm font-medium">
+                                            {project.start_date} to {project.end_date}
+                                        </div>
                                     </div>
-                                    <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
-                                        {project.status}
-                                    </Badge>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-muted-foreground">Status</Label>
+                                        <div>
+                                            <Badge variant={project.status === 'active' ? 'default' : 'secondary'}>
+                                                {project.status}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-muted-foreground">Working Days</Label>
+                                        <div className="text-sm font-semibold text-primary">
+                                            {project.working_days.length} Days
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <Label className="text-xs uppercase text-muted-foreground">Sprints</Label>
+                                        <div className="text-sm font-semibold">
+                                            {project.sprints.length} Total
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -170,6 +205,83 @@ export default function Show({ project, developers, can }: Props) {
                             </Card>
                         )}
                     </div>
+
+                    {/* Sprints Section */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Calendar className="h-5 w-5" /> Project Sprints
+                                </CardTitle>
+                                <CardDescription>Sprint schedule generated from working days.</CardDescription>
+                            </div>
+                            {can.manage && (
+                                <div className="flex gap-2">
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => {
+                                            if (confirm('Regenerate sprints with 6 days each?')) {
+                                                router.post(route('projects.sprints.store', project.id), {
+                                                    days_per_sprint: 6
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        {project.sprints.length > 0 ? 'Regenerate' : 'Generate Sprints'}
+                                    </Button>
+                                    {project.sprints.length > 0 && (
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            className="text-destructive"
+                                            onClick={() => {
+                                                if (confirm('Clear all sprints?')) {
+                                                    router.delete(route('projects.sprints.destroy', project.id));
+                                                }
+                                            }}
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="text-xs uppercase text-muted-foreground bg-muted/50">
+                                        <tr>
+                                            <th className="px-4 py-3">Sprint #</th>
+                                            <th className="px-4 py-3">Start Date</th>
+                                            <th className="px-4 py-3">End Date</th>
+                                            <th className="px-4 py-3 text-right">Duration</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {project.sprints.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">
+                                                    No sprints generated yet.
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            project.sprints.map((sprint) => (
+                                                <tr key={sprint.id} className="hover:bg-muted/30">
+                                                    <td className="px-4 py-3 font-semibold">Sprint {sprint.sprint_number}</td>
+                                                    <td className="px-4 py-3">{sprint.start_date}</td>
+                                                    <td className="px-4 py-3">{sprint.end_date}</td>
+                                                    <td className="px-4 py-3 text-right text-muted-foreground">
+                                                        Standard (6 days)
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Team Members List */}
                     <Card>

@@ -81,16 +81,12 @@
 
 ---
 
-## Phase 5 — Developer Daily View
-> লক্ষ্য: Developer login করলে আজকের কাজ দেখবে
+## Phase 5 — Project current sprint daily view
 
 ### Backend
-- [ ] API: `GET /my-tasks/today` — আজকের assigned tasks
-- [ ] API: `GET /my-tasks/sprint/{id}` — sprint-এর সব tasks
-- [ ] API: `PATCH /tasks/{id}/status` — manual status update
-
+frontend e egula korar jonno ja lagbe
 ### Frontend
-- [ ] Developer dashboard — "আজকের কাজ" section
+- [ ] Today task list depend on sprint
 - [ ] Task card: title, priority badge, status chip, estimated time
 - [ ] Sprint progress bar (done / total)
 - [ ] Full sprint task list (collapsible by day)

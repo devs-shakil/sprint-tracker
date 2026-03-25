@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\Segment;
+use App\Models\WorkingDay;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -53,6 +56,17 @@ class ProjectController extends Controller
             ]);
         }
 
+        // Generate working days (Sun-Thu)
+        $period = CarbonPeriod::create($project->start_date, $project->end_date);
+        foreach ($period as $date) {
+            if (!$date->isFriday() && !$date->isSaturday()) {
+                WorkingDay::create([
+                    'project_id' => $project->id,
+                    'date' => $date->format('Y-m-d'),
+                ]);
+            }
+        }
+
         return redirect()->route('projects.index')->with('success', 'Project created successfully.');
     }
 
@@ -61,7 +75,7 @@ class ProjectController extends Controller
         $developers = \App\Models\User::where('role', 'developer')->get();
 
         return Inertia::render('Projects/Show', [
-            'project' => $project->load('segments', 'members.user', 'members.segment'),
+            'project' => $project->load('segments', 'members.user', 'members.segment', 'workingDays', 'sprints'),
             'developers' => $developers,
             'can' => [
                 'manage' => auth()->user()?->role === 'owner' && $project->owner_id === auth()->id(),
