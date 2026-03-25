@@ -4,43 +4,39 @@
 
 ---
 
-## Phase 1 — Project Setup & Auth
-> লক্ষ্য: Base project ready, login/register কাজ করবে
+## Phase 1 — Project Setup & Public/Owner Views
+> লক্ষ্য: Base project ready, owner can login, public can view projects
 
 ### Backend (Laravel)
 - [ ] Laravel project init, `.env` config (DB, Mail, Queue)
-- [ ] `users` table migration — role field: `owner | developer`
-- [ ] Laravel Sanctum / Breeze auth setup
-- [ ] Register, Login, Logout API
-- [ ] Role-based middleware (`owner`, `developer`)
+- [ ] `users` table migration — role field: `owner` (only)
+- [ ] Laravel Breeze auth setup (Owner login)
 - [ ] Inertia.js install & configure
+- [ ] Routes: Public index and show for projects
 
 ### Frontend (React + Inertia)
 - [ ] React + Inertia + Tailwind + Shadcn UI setup
-- [ ] Login page (Shadcn Form + validation)
-- [ ] Register page
-- [ ] Auth redirect by role (owner → dashboard, dev → my tasks)
-- [ ] Layout component (Sidebar + Topbar)
+- [ ] Login page (Owner only)
+- [ ] Public Projects Grid (`/projects`)
+- [ ] Public Project Detail View
+- [ ] Owner Dashboard (Project management)
 
 ---
 
-## Phase 2 — Project & Team Management
-> লক্ষ্য: Owner project create করতে পারবে, developer assign করতে পারবে
+## Phase 2 — Project Management (Owner)
+> লক্ষ্য: Owner project create করতে পারবে, view public থাকবে
 
 ### Backend
 - [ ] `projects` table — name, start_date, end_date, owner_id, status
-- [ ] `project_members` table — project_id, user_id, role/segment
-- [ ] `segments` table — name, project_id (e.g. App, Web, Admin API)
-- [ ] CRUD API: Project (create, update, delete, list)
-- [ ] API: Add developer to project with segment
-- [ ] API: List members of a project
+- [ ] `segments` table — name, project_id (e.g. App, Web)
+- [ ] CRUD API: Project (Owner only for create, update, delete)
+- [ ] API: List all projects (Public)
 
 ### Frontend
-- [ ] Project list page (owner view)
-- [ ] Create project form — name, date range, segments
-- [ ] Working day calendar picker (select/deselect individual days)
-- [ ] Add developer to project (search user → assign segment)
-- [ ] Project detail page — members list, segments
+- [ ] Project Grid View (Public) — name, dates, status
+- [ ] Create project form (Owner only) — name, date range, segments
+- [ ] Project detail page (Public) — segments, basic info
+- [ ] Project detail page (Owner) — Edit/Delete options
 
 ---
 

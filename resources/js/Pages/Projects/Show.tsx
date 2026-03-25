@@ -37,9 +37,12 @@ interface Project {
 interface Props {
     project: Project;
     developers: User[];
+    can: {
+        manage: boolean;
+    };
 }
 
-export default function Show({ project, developers }: Props) {
+export default function Show({ project, developers, can }: Props) {
     const { data, setData, post, processing, errors, reset } = useForm({
         user_id: '',
         segment_id: '',
@@ -80,9 +83,9 @@ export default function Show({ project, developers }: Props) {
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className={`grid grid-cols-1 ${can.manage ? 'md:grid-cols-3' : ''} gap-6`}>
                         {/* Project Info */}
-                        <Card className="md:col-span-2">
+                        <Card className={can.manage ? 'md:col-span-2' : ''}>
                             <CardHeader>
                                 <CardTitle>Overview</CardTitle>
                                 <CardDescription>Project timelines and segments.</CardDescription>
@@ -111,59 +114,61 @@ export default function Show({ project, developers }: Props) {
                             </CardContent>
                         </Card>
 
-                        {/* Add Member Form */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <UserPlus className="h-5 w-5" /> Add Team Member
-                                </CardTitle>
-                                <CardDescription>Assign a developer to a segment.</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <form onSubmit={addMember} className="space-y-4">
-                                    <div>
-                                        <Label htmlFor="user_id">Developer</Label>
-                                        <select
-                                            id="user_id"
-                                            value={data.user_id}
-                                            onChange={(e) => setData('user_id', e.target.value)}
-                                            className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                            required
-                                        >
-                                            <option value="">Select Developer</option>
-                                            {developers.map((dev) => (
-                                                <option key={dev.id} value={dev.id}>
-                                                    {dev.name} ({dev.email})
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.user_id} className="mt-2" />
-                                    </div>
+                        {/* Add Member Form - Owner Only */}
+                        {can.manage && (
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-lg flex items-center gap-2">
+                                        <UserPlus className="h-5 w-5" /> Add Team Member
+                                    </CardTitle>
+                                    <CardDescription>Assign a developer to a segment.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={addMember} className="space-y-4">
+                                        <div>
+                                            <Label htmlFor="user_id">Developer</Label>
+                                            <select
+                                                id="user_id"
+                                                value={data.user_id}
+                                                onChange={(e) => setData('user_id', e.target.value)}
+                                                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                required
+                                            >
+                                                <option value="">Select Developer</option>
+                                                {developers.map((dev) => (
+                                                    <option key={dev.id} value={dev.id}>
+                                                        {dev.name} ({dev.email})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <InputError message={errors.user_id} className="mt-2" />
+                                        </div>
 
-                                    <div>
-                                        <Label htmlFor="segment_id">Segment (Optional)</Label>
-                                        <select
-                                            id="segment_id"
-                                            value={data.segment_id}
-                                            onChange={(e) => setData('segment_id', e.target.value)}
-                                            className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                        >
-                                            <option value="">General (No Segment)</option>
-                                            {project.segments.map((segment) => (
-                                                <option key={segment.id} value={segment.id}>
-                                                    {segment.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <InputError message={errors.segment_id} className="mt-2" />
-                                    </div>
+                                        <div>
+                                            <Label htmlFor="segment_id">Segment (Optional)</Label>
+                                            <select
+                                                id="segment_id"
+                                                value={data.segment_id}
+                                                onChange={(e) => setData('segment_id', e.target.value)}
+                                                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            >
+                                                <option value="">General (No Segment)</option>
+                                                {project.segments.map((segment) => (
+                                                    <option key={segment.id} value={segment.id}>
+                                                        {segment.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <InputError message={errors.segment_id} className="mt-2" />
+                                        </div>
 
-                                    <Button type="submit" className="w-full" disabled={processing}>
-                                        Add to Project
-                                    </Button>
-                                </form>
-                            </CardContent>
-                        </Card>
+                                        <Button type="submit" className="w-full" disabled={processing}>
+                                            Add to Project
+                                        </Button>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
 
                     {/* Team Members List */}
@@ -182,13 +187,13 @@ export default function Show({ project, developers }: Props) {
                                             <th className="px-4 py-3">Member</th>
                                             <th className="px-4 py-3">Email</th>
                                             <th className="px-4 py-3">Segment</th>
-                                            <th className="px-4 py-3 text-right">Actions</th>
+                                            {can.manage && <th className="px-4 py-3 text-right">Actions</th>}
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y">
                                         {project.members.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                                                <td colSpan={can.manage ? 4 : 3} className="px-4 py-8 text-center text-muted-foreground">
                                                     No team members assigned yet.
                                                 </td>
                                             </tr>
@@ -204,16 +209,18 @@ export default function Show({ project, developers }: Props) {
                                                             <span className="text-muted-foreground italic">General</span>
                                                         )}
                                                     </td>
-                                                    <td className="px-4 py-3 text-right">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon"
-                                                            onClick={() => removeMember(member.id)}
-                                                            className="hover:text-destructive"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </td>
+                                                    {can.manage && (
+                                                        <td className="px-4 py-3 text-right">
+                                                            <Button 
+                                                                variant="ghost" 
+                                                                size="icon"
+                                                                onClick={() => removeMember(member.id)}
+                                                                className="hover:text-destructive"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))
                                         )}

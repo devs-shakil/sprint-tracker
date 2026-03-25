@@ -29,21 +29,26 @@ interface Project {
 
 interface Props {
     projects: Project[];
+    can: {
+        create: boolean;
+    };
 }
 
-export default function Index({ projects }: Props) {
+export default function Index({ projects, can }: Props) {
     return (
         <AuthenticatedLayout
             header={
                 <div className="flex justify-between items-center">
                     <h2 className="text-xl font-semibold leading-tight text-foreground">
-                        Projects
+                        Public Projects
                     </h2>
-                    <Button>
-                        <Link href={route('projects.create')} className="flex items-center">
-                            <Plus className="mr-2 h-4 w-4" /> New Project
-                        </Link>
-                    </Button>
+                    {can.create && (
+                        <Button>
+                            <Link href={route('projects.create')} className="flex items-center">
+                                <Plus className="mr-2 h-4 w-4" /> New Project
+                            </Link>
+                        </Button>
+                    )}
                 </div>
             }
         >

@@ -12,12 +12,14 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = Project::with('segments', 'members.user')
-            ->where('owner_id', auth()->id())
             ->latest()
             ->get();
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
+            'can' => [
+                'create' => auth()->user()?->role === 'owner',
+            ],
         ]);
     }
 
@@ -56,15 +58,14 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        if ($project->owner_id !== auth()->id()) {
-            abort(403);
-        }
-
         $developers = \App\Models\User::where('role', 'developer')->get();
 
         return Inertia::render('Projects/Show', [
             'project' => $project->load('segments', 'members.user', 'members.segment'),
             'developers' => $developers,
+            'can' => [
+                'manage' => auth()->user()?->role === 'owner' && $project->owner_id === auth()->id(),
+            ],
         ]);
     }
 }

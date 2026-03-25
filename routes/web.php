@@ -16,19 +16,20 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+
 Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::get('/dashboard', function () {
         return Inertia::render('Dashboard');
     })->name('dashboard');
 
-    Route::resource('projects', ProjectController::class);
+    Route::resource('projects', ProjectController::class)->except(['index', 'show']);
     Route::post('projects/{project}/members', [ProjectMemberController::class, 'store'])->name('projects.members.store');
     Route::delete('projects/{project}/members/{member}', [ProjectMemberController::class, 'destroy'])->name('projects.members.destroy');
 });
 
-Route::get('/my-tasks', function () {
-    return Inertia::render('MyTasks');
-})->middleware(['auth', 'verified', 'role:developer'])->name('my-tasks');
+// Route removed as per simplified role requirements
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
