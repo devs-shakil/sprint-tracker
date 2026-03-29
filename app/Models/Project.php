@@ -12,6 +12,7 @@ class Project extends Model
         'start_date',
         'end_date',
         'status',
+        'webhook_secret',
     ];
 
     public function owner()

@@ -27,11 +27,10 @@
 
 ---
 
-## Phase 3 — Sprint Distribution & Git Integration
-> লক্ষ্য: Commit করলে task auto-complete হবে এবং task-গুলো sprints-এ distribute করা যাবে।
+## Phase 3 — Git Integration
+> লক্ষ্য: Commit করলে task auto-complete হবে 
 
 ### Backend
-- [x] `TaskDistributorService`: Tasks-কে automatically sprints এবং developers-দের মধ্যে বণ্টন করা।
 - [ ] `git_commits` table — project_id, task_id, commit_hash, message, author, committed_at
 - [ ] `POST /webhook/gitlab` endpoint (verify secret token)
 - [ ] `POST /webhook/github` endpoint
@@ -41,6 +40,7 @@
   - [ ] Fuzzy match by task title (optional)
 - [ ] Task status → `completed` auto-update on match
 - [ ] Store commit metadata linked to task
+- [ ] Ekta way thakbe or indentify thakbe jeta diye task ta commit korle auto done hobe
 
 ### Frontend
 - [ ] Project settings page — Git webhook URL + secret key

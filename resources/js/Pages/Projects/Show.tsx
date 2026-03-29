@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText, GitCommit as GitIcon, Copy, ExternalLink, Github, Gitlab } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -30,6 +30,14 @@ interface WorkingDay {
     date: string;
 }
 
+interface GitCommit {
+    id: number;
+    commit_hash: string;
+    message: string;
+    author: string;
+    committed_at: string;
+}
+
 interface Task {
     id: number;
     title: string;
@@ -39,6 +47,7 @@ interface Task {
     segment_id: number;
     sprint_id?: number;
     assignee?: User;
+    git_commits?: GitCommit[];
 }
 
 interface Sprint {
@@ -56,6 +65,7 @@ interface Project {
     start_date: string;
     end_date: string;
     status: string;
+    webhook_secret?: string;
     segments: Segment[];
     members: Member[];
     working_days: WorkingDay[];
@@ -235,6 +245,69 @@ export default function Show({ project, developers, can }: Props) {
                             </Card>
                         )} */}
                     </div>
+                    
+                    {/* Git Integration Section - Owner Only */}
+                    {can.manage && (
+                        <Card className="border-primary/10 bg-primary/5 shadow-sm mb-6">
+                            <CardHeader className="py-4">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    <GitIcon className="h-5 w-5 text-primary" /> Git Integration
+                                </CardTitle>
+                                <CardDescription>Connect GitLab or GitHub to auto-complete tasks using commit messages.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Webhook URL</Label>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 bg-background border rounded-md px-3 py-2 text-xs font-mono truncate select-all">
+                                                {window.location.origin}/api/webhook/gitlab/{project.id}
+                                            </div>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                className="h-8 w-8"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`${window.location.origin}/api/webhook/gitlab/${project.id}`);
+                                                    alert('Webhook URL copied to clipboard');
+                                                }}
+                                            >
+                                                <Copy className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Webhook Secret</Label>
+                                        <div className="flex gap-2">
+                                            <div className="flex-1 bg-background border rounded-md px-3 py-2 text-xs font-mono truncate select-all">
+                                                {project.webhook_secret || 'Not generated'}
+                                            </div>
+                                            <Button 
+                                                variant="outline" 
+                                                size="icon" 
+                                                className="h-8 w-8"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(project.webhook_secret || '');
+                                                    alert('Secret key copied to clipboard');
+                                                }}
+                                            >
+                                                <Copy className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-[11px] text-blue-700 leading-relaxed">
+                                    <p className="font-bold mb-1">How to use:</p>
+                                    <ul className="list-disc ml-4 space-y-1">
+                                        <li>Add the <strong>Webhook URL</strong> to your GitLab/GitHub project settings.</li>
+                                        <li>Set the <strong>Trigger</strong> to "Push events".</li>
+                                        <li>Paste the <strong>Secret</strong> into the "Secret token" field.</li>
+                                        <li>Include <code>#TASK_ID done</code> in your commit message (e.g., <code>Fixed auth bug #102 done</code>) to auto-complete tasks.</li>
+                                    </ul>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Sprints Section - Accordion Grid */}
                     <Card className="px-3 border-none shadow-none bg-transparent">
@@ -531,7 +604,17 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                                                             <Clock className="h-2 w-2" /> {task.estimated_hours}h
                                                                         </span>
                                                                     )}
+                                                                    {task.git_commits && task.git_commits.length > 0 && (
+                                                                        <span className="text-[9px] text-primary/70 bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                            <GitIcon className="h-2 w-2" /> {task.git_commits.length}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
+                                                                {task.git_commits && task.git_commits.length > 0 && (
+                                                                    <div className="mt-2 pt-2 border-t border-dashed border-border/50 text-[10px] text-muted-foreground italic truncate">
+                                                                        "{task.git_commits[task.git_commits.length - 1].message}"
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     ))}

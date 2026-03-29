@@ -47,6 +47,7 @@ class ProjectController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'status' => 'active',
+            'webhook_secret' => \Illuminate\Support\Str::random(32),
         ]);
 
         foreach ($validated['segments'] as $segmentName) {
@@ -81,7 +82,8 @@ class ProjectController extends Controller
                 'members.segment', 
                 'workingDays', 
                 'sprints.tasks.segment', 
-                'sprints.tasks.assignee'
+                'sprints.tasks.assignee',
+                'sprints.tasks.gitCommits'
             ]),
             'developers' => $developers,
             'can' => [
