@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -46,6 +46,7 @@ interface Sprint {
     sprint_number: number;
     start_date: string;
     end_date: string;
+    status: string;
     tasks: Task[];
 }
 
@@ -94,15 +95,31 @@ export default function Show({ project, developers, can }: Props) {
     return (
         <AuthenticatedLayout
             header={
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon">
-                        <Link href={route('projects.index')}>
-                            <ArrowLeft className="h-4 w-4" />
-                        </Link>
-                    </Button>
-                    <h2 className="text-xl font-semibold leading-tight text-foreground">
-                        {project.name}
-                    </h2>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Button variant="ghost" size="icon">
+                            <Link href={route('projects.index')}>
+                                <ArrowLeft className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                        <h2 className="text-xl font-semibold leading-tight text-foreground">
+                            {project.name}
+                        </h2>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {can.manage && (
+                            <>
+                                <Button variant="outline" className="border-primary/20 hover:bg-primary/5" asChild>
+                                    <Link href={route('projects.reports.index', project.id)} className="flex items-center">
+                                        <FileText className="mr-2 h-4 w-4 text-primary" /> Project Report
+                                    </Link>
+                                </Button>
+                                <Button onClick={() => router.post(route('projects.sprints.store-single', project.id))} className="bg-primary hover:bg-primary/90">
+                                    <Plus className="mr-2 h-4 w-4" /> New Sprint
+                                </Button>
+                            </>
+                        )}
+                    </div>
                 </div>
             }
         >
@@ -373,7 +390,11 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                     <div>
                         <div className="font-bold text-lg text-foreground flex items-center gap-2">
                             Sprint {sprint.sprint_number}
-                            {isCurrent && (
+                            {sprint.status === 'completed' ? (
+                                <Badge variant="secondary" className="text-[10px] h-5 bg-green-100 text-green-700 border-green-200 font-bold">
+                                    COMPLETED
+                                </Badge>
+                            ) : isCurrent && (
                                 <Badge variant="default" className="text-[10px] h-5 bg-primary font-bold animate-pulse">
                                     CURRENT
                                 </Badge>
@@ -383,6 +404,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                             </Badge>
                         </div>
                         {isEditingDate ? (
+// ... (rest of editing code exactly as is)
                             <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
                                 <input 
                                     type="date"
@@ -528,6 +550,35 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    {/* Sprint Actions Footer */}
+                    <div className="p-4 bg-muted/20 border-t border-border/50 flex justify-between items-center">
+                        <Button variant="outline" size="sm" asChild className="border-primary/20 hover:bg-primary/5">
+                            <Link href={route('projects.sprints.report', [project.id, sprint.id])} className="flex items-center">
+                                <FileText className="mr-2 h-4 w-4 text-primary" /> View Sprint Report
+                            </Link>
+                        </Button>
+                        
+                        {can.manage && sprint.status !== 'completed' && (
+                            <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/10"
+                                onClick={() => {
+                                    if (confirm('Are you sure you want to complete this sprint? Incomplete tasks will be carried over to the next sprint.')) {
+                                        router.post(route('projects.sprints.complete', [project.id, sprint.id]));
+                                    }
+                                }}
+                            >
+                                <CheckCircle2 className="mr-2 h-4 w-4" /> Complete Sprint
+                            </Button>
+                        )}
+
+                        {sprint.status === 'completed' && (
+                            <div className="text-xs font-bold text-green-600 flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+                                <CheckCircle2 className="h-4 w-4" /> Sprint Completed
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             )}

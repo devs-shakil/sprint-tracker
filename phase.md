@@ -78,13 +78,70 @@
   - [ ] Incomplete tasks list (with assigned dev)
   - [ ] Per-developer summary
 - [ ] Service: `TaskCarryOverService` — incomplete tasks → next sprint-এ move
-- [ ] API: Manual "Send Report Now" trigger
 
 ### Frontend
-- [ ] Report preview page (owner)
-- [ ] Sprint history list
-- [ ] Each sprint-এ "View Report" button
+- [ ] Report preview page & download as a docs or pdf file
+- [ ] report view as ready for client sending
+Completed Tasks Summary - February 2026
+The Secure Score API Access with OAuth2 authentication has been successfully completed on the backend. All protected endpoints are now secured using token-based authorization to ensure safe and controlled API access.
+On the frontend, approximately 80% of the OAuth2 integration has been implemented. The remaining work is currently in progress. Once the integration is fully completed, we will move to the testing phase to ensure everything functions smoothly and securely before final deployment.
+Frontend
+Fixing:
+BdCricTime:
+Added social links list in the footer.
+Enabled footer display in mobile version.
+Implemented footer accordion system for mobile.
+Implemented scroll-based header hide/show (top & bottom behavior).
+Redesigned Home Page news section.
+Updated Home Page news section to Bangla.
+Included Women’s ranking in ICC Rankings page (https://bdcrictime.com/icc-rankings/women).
+Added latest update date in ICC Ranking page.
+Fixed Post page mobile app issue.
+Contact page contact info changed
+Applied a unified layout across all Team Related pages & Optimize code :
+Home
+Result 
+Players
+Domestic
+Performance
+News
+Photos
+OAuth2 Integration in Frontend(New Feature - 80% completed)
+Implemented OAuth2 authentication flow in frontend.
+Integrated access token handling for protected API calls.
+Ensured secure data fetching using Authorization headers.
+Updated frontend API handling to align with secured backend endpoints.
 
+
+
+
+Backend
+BdCricTime
+ Fixing:
+Fixed old and cancelled match showing issue in the header score slider.
+Fixed old and cancelled matches appearing in scorecard slider API.
+Updated URL Shortener to the latest version.
+Fixed sorting issue in series standings.
+Reduced cache TTL in selected functions to ensure fresher data.
+Improved non-filtered match & competition data update handling.
+BdSportsTime 
+Fixed issue in SportsTime where the last two newly added writers were not appearing during news publishing. News was incorrectly published under “BDSportsTime Desk” instead of the selected writers.
+
+	New Feature:
+	Secure Scor  e API Access OAuth2:
+Implemented full OAuth2-based secure access for Score APIs.
+Integrated OAuth2 authentication flow.
+Configured Client ID & Client Secret–based token generation.
+Implemented access token usage in Authorization headers for protected endpoints.
+Added strict validation to Score APIs (e.g., Series ID must be a valid integer and non-empty).
+Improved request validation to prevent malformed or unauthorized access.
+Removed redundant double-check logic.
+
+		Matches :
+Created a new scheduled job to update competition matches and align upcoming fixtures more accurately.
+Ensured fixtures are updated to reflect near-similar scheduling patterns correctly.
+
+this is sample for monthly report
 ---
 
 ## Phase 6 — AI Features (Optional)

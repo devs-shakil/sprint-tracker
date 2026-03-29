@@ -9,7 +9,7 @@ class Sprint extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['project_id', 'sprint_number', 'start_date', 'end_date'];
+    protected $fillable = ['project_id', 'sprint_number', 'start_date', 'end_date', 'status', 'completed_at'];
 
     public function project()
     {

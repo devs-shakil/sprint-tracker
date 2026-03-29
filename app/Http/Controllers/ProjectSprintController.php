@@ -3,16 +3,36 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Sprint;
 use App\Services\SprintGeneratorService;
+use App\Services\TaskCarryOverService;
 use Illuminate\Http\Request;
 
 class ProjectSprintController extends Controller
 {
     protected $sprintGenerator;
+    protected $carryOverService;
 
-    public function __construct(SprintGeneratorService $sprintGenerator)
+    public function __construct(SprintGeneratorService $sprintGenerator, TaskCarryOverService $carryOverService)
     {
         $this->sprintGenerator = $sprintGenerator;
+        $this->carryOverService = $carryOverService;
+    }
+
+    public function complete(Request $request, Project $project, Sprint $sprint)
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403);
+        }
+
+        $sprint->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        $carryOverCount = $this->carryOverService->carryOver($sprint);
+
+        return back()->with('success', "Sprint completed. $carryOverCount tasks carried over.");
     }
 
     public function store(Request $request, Project $project)
