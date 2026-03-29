@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     
     // Sprint routes
     Route::post('projects/{project}/sprints', [ProjectSprintController::class, 'store'])->name('projects.sprints.store');
+    Route::post('projects/{project}/sprints/single', [ProjectSprintController::class, 'storeSingle'])->name('projects.sprints.store-single');
     Route::delete('projects/{project}/sprints', [ProjectSprintController::class, 'destroy'])->name('projects.sprints.destroy');
 
     // Task routes

@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2 } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -219,19 +219,19 @@ export default function Show({ project, developers, can }: Props) {
                         )} */}
                     </div>
 
-                    {/* Sprints Section - Dynamic Grid */}
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    {/* Sprints Section - Accordion Grid */}
+                    <Card className="border-none shadow-none bg-transparent">
+                        <CardHeader className="flex flex-row items-center justify-between px-0 pb-4">
                             <div>
-                                <CardTitle className="flex items-center gap-2 text-xl font-bold">
-                                    <Calendar className="h-6 w-6 text-primary" /> Project Sprint Grid
+                                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                                    <Calendar className="h-6 w-6 text-primary" /> Sprints
                                 </CardTitle>
-                                <CardDescription>Tasks organized by segment and sprint. Mark as done or add tasks directly.</CardDescription>
+                                <CardDescription>Manage your project sprints and tasks.</CardDescription>
                             </div>
                             {can.manage && (
-                                <div className="flex gap-3">
+                                <div className="flex gap-2">
                                     <Button 
-                                        variant="default" 
+                                        variant="outline" 
                                         size="sm"
                                         onClick={() => {
                                             if (confirm('Distribute all unassigned tasks across sprints and developers?')) {
@@ -239,123 +239,36 @@ export default function Show({ project, developers, can }: Props) {
                                             }
                                         }}
                                         disabled={project.sprints.length === 0}
-                                        className="bg-primary hover:bg-primary/90"
                                     >
                                         Distribute Tasks
                                     </Button>
-                                    {/* <Button 
-                                        variant="outline" 
+                                    <Button 
+                                        variant="default" 
                                         size="sm"
-                                        onClick={() => {
-                                            if (confirm('Regenerate sprints with 6 days each? This will clear existing sprint assignments!')) {
-                                                router.post(route('projects.sprints.store', project.id), {
-                                                    days_per_sprint: 6
-                                                });
-                                            }
-                                        }}
+                                        onClick={() => router.post(route('projects.sprints.store-single', project.id))}
+                                        className="bg-primary hover:bg-primary/90"
                                     >
-                                        {project.sprints.length > 0 ? 'Regenerate Sprints' : 'Generate Sprints'}
-                                    </Button> */}
+                                        <Plus className="h-4 w-4 mr-1" /> New Sprint
+                                    </Button>
                                 </div>
                             )}
                         </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto rounded-xl border bg-muted/50 shadow-inner">
-                                <table className="w-full text-sm border-collapse min-w-[800px]">
-                                    <thead>
-                                        <tr className="bg-muted text-muted-foreground uppercase text-[10px] tracking-wider font-bold border-b border-border/50">
-                                            <th className="px-4 py-3 text-left w-48 border-r border-border/50">Sprint</th>
-                                            {project.segments.map((segment) => (
-                                                <th key={segment.id} className="px-4 py-3 text-center border-r border-border/50">
-                                                    {segment.name}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/50">
-                                        {project.sprints.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={project.segments.length + 1} className="px-4 py-12 text-center text-muted-foreground italic bg-background">
-                                                    No sprints generated yet. Use the button above to start.
-                                                </td>
-                                            </tr>
-                                        ) : (
-                                            project.sprints.map((sprint) => (
-                                                <tr key={sprint.id} className="hover:bg-muted/30 transition-colors bg-background">
-                                                    <td className="px-4 py-4 border-r border-border/50 align-top">
-                                                        <div className="font-bold text-base text-primary">Sprint {sprint.sprint_number}</div>
-                                                        <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
-                                                        </div>
-                                                    </td>
-                                                    {project.segments.map((segment) => {
-                                                        const sprintTasks = sprint.tasks?.filter(t => t.segment_id === segment.id) || [];
-                                                        return (
-                                                            <td key={segment.id} className="p-2 border-r border-border/50 align-top min-w-[200px]">
-                                                                <div className="space-y-2">
-                                                                    {sprintTasks.map((task) => (
-                                                                        <div 
-                                                                            key={task.id}
-                                                                            onClick={() => {
-                                                                                if (can.manage) {
-                                                                                    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
-                                                                                    router.patch(route('tasks.update-status', task.id), { status: newStatus });
-                                                                                }
-                                                                            }}
-                                                                            className={`group flex items-start gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/30 ${
-                                                                                task.status === 'completed' 
-                                                                                    ? 'bg-muted/50 border-transparent' 
-                                                                                    : 'bg-background border-border shadow-sm'
-                                                                            }`}
-                                                                        >
-                                                                            <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                                                                                task.status === 'completed' 
-                                                                                    ? 'bg-primary border-primary text-white' 
-                                                                                    : 'border-muted-foreground/30 group-hover:border-primary'
-                                                                            }`}>
-                                                                                {task.status === 'completed' && <span className="text-[10px]">✓</span>}
-                                                                            </div>
-                                                                            <div className="flex-1 overflow-hidden">
-                                                                                <div className={`font-medium break-words ${task.status === 'completed' ? 'line-through text-muted-foreground opacity-60' : ''}`}>
-                                                                                    {task.title}
-                                                                                </div>
-                                                                                <div className="flex items-center gap-2 mt-1">
-                                                                                    {/* {task.priority && (
-                                                                                        <span className={`text-[9px] uppercase font-bold ${
-                                                                                            task.priority === 'high' ? 'text-red-500' : 
-                                                                                            task.priority === 'medium' ? 'text-yellow-600' : 'text-blue-500'
-                                                                                        }`}>
-                                                                                            {task.priority}
-                                                                                        </span>
-                                                                                    )} */}
-                                                                                    {task.estimated_hours > 0 && (
-                                                                                        <span className="text-[9px] text-muted-foreground bg-muted px-1 rounded">
-                                                                                            {task.estimated_hours}h
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                    
-                                                                    {/* Quick Add Input */}
-                                                                    {can.manage && (
-                                                                        <QuickAddTask 
-                                                                            projectId={project.id} 
-                                                                            segmentId={segment.id} 
-                                                                            sprintId={sprint.id} 
-                                                                        />
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                        );
-                                                    })}
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
+                        <CardContent className="px-0 space-y-4">
+                            {project.sprints.length === 0 ? (
+                                <Card className="p-12 text-center text-muted-foreground border-dashed">
+                                    <p>No sprints yet. Click "New Sprint" to get started.</p>
+                                </Card>
+                            ) : (
+                                project.sprints.map((sprint, index) => (
+                                    <SprintAccordion 
+                                        key={sprint.id} 
+                                        sprint={sprint} 
+                                        project={project} 
+                                        can={can} 
+                                        isDefaultOpen={index === 0}
+                                    />
+                                ))
+                            )}
                         </CardContent>
                     </Card>
 
@@ -420,6 +333,126 @@ export default function Show({ project, developers, can }: Props) {
                 </div>
             </div>
         </AuthenticatedLayout>
+    );
+}
+
+function SprintAccordion({ sprint, project, can, isDefaultOpen = false }: { sprint: Sprint, project: Project, can: any, isDefaultOpen?: boolean }) {
+    const [isOpen, setIsOpen] = useState(isDefaultOpen);
+
+    return (
+        <Card className="overflow-hidden border-border/50">
+            <div 
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors group"
+            >
+                <div className="flex items-center gap-4">
+                    <div className="bg-primary/10 p-2 rounded-lg">
+                        {isOpen ? <ChevronDown className="h-5 w-5 text-primary" /> : <ChevronRight className="h-5 w-5 text-primary" />}
+                    </div>
+                    <div>
+                        <div className="font-bold text-lg text-foreground flex items-center gap-2">
+                            Sprint {sprint.sprint_number}
+                            <Badge variant="outline" className="text-[10px] h-5">
+                                {sprint.tasks.length} Tasks
+                            </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-6">
+                    <div className="flex gap-4 text-xs">
+                        <div className="flex flex-col items-end">
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Planned</span>
+                            <span className="font-semibold">{sprint.tasks.reduce((acc, t) => acc + (t.estimated_hours || 0), 0)}h</span>
+                        </div>
+                        <div className="flex flex-col items-end">
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Done</span>
+                            <span className="font-semibold text-green-600">
+                                {sprint.tasks.filter(t => t.status === 'completed').reduce((acc, t) => acc + (t.estimated_hours || 0), 0)}h
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {isOpen && (
+                <CardContent className="p-0 border-t border-border/50 bg-background animate-in slide-in-from-top-2 duration-200">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm border-collapse min-w-[800px]">
+                            <thead>
+                                <tr className="bg-muted/20 text-muted-foreground uppercase text-[10px] tracking-wider font-bold border-b border-border/50">
+                                    {project.segments.map((segment) => (
+                                        <th key={segment.id} className="px-4 py-3 text-center border-r border-border/50 last:border-r-0">
+                                            {segment.name}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    {project.segments.map((segment) => {
+                                        const sprintTasks = sprint.tasks?.filter(t => t.segment_id === segment.id) || [];
+                                        return (
+                                            <td key={segment.id} className="p-3 border-r border-border/50 last:border-r-0 align-top min-w-[200px]">
+                                                <div className="space-y-2">
+                                                    {sprintTasks.map((task) => (
+                                                        <div 
+                                                            key={task.id}
+                                                            onClick={() => {
+                                                                if (can.manage) {
+                                                                    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+                                                                    router.patch(route('tasks.update-status', task.id), { status: newStatus });
+                                                                }
+                                                            }}
+                                                            className={`group flex items-start gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/40 ${
+                                                                task.status === 'completed' 
+                                                                    ? 'bg-muted/30 border-transparent' 
+                                                                    : 'bg-background border-border shadow-sm'
+                                                            }`}
+                                                        >
+                                                            <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                                                                task.status === 'completed' 
+                                                                    ? 'bg-primary border-primary text-white scale-110' 
+                                                                    : 'border-muted-foreground/30 group-hover:border-primary group-hover:scale-110'
+                                                            }`}>
+                                                                {task.status === 'completed' && <span className="text-[10px]">✓</span>}
+                                                            </div>
+                                                            <div className="flex-1 overflow-hidden">
+                                                                <div className={`font-medium break-words leading-relaxed ${task.status === 'completed' ? 'line-through text-muted-foreground opacity-60' : ''}`}>
+                                                                    {task.title}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1.5">
+                                                                    {task.estimated_hours > 0 && (
+                                                                        <span className="text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded flex items-center gap-1">
+                                                                            <Clock className="h-2 w-2" /> {task.estimated_hours}h
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    
+                                                    {can.manage && (
+                                                        <QuickAddTask 
+                                                            projectId={project.id} 
+                                                            segmentId={segment.id} 
+                                                            sprintId={sprint.id} 
+                                                        />
+                                                    )}
+                                                </div>
+                                            </td>
+                                        );
+                                    })}
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </CardContent>
+            )}
+        </Card>
     );
 }
 

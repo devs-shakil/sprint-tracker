@@ -31,6 +31,27 @@ class ProjectSprintController extends Controller
         return back()->with('success', 'Sprints generated successfully.');
     }
 
+    public function storeSingle(Request $request, Project $project)
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403);
+        }
+
+        $lastSprint = $project->sprints()->orderBy('sprint_number', 'desc')->first();
+        
+        $sprintNumber = $lastSprint ? $lastSprint->sprint_number + 1 : 1;
+        $startDate = $lastSprint ? date('Y-m-d', strtotime($lastSprint->end_date . ' +1 day')) : $project->start_date;
+        $endDate = date('Y-m-d', strtotime($startDate . ' +6 days')); // Default 7 days (6 days after start)
+
+        $project->sprints()->create([
+            'sprint_number' => $sprintNumber,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        return back()->with('success', "Sprint $sprintNumber added.");
+    }
+
     public function destroy(Project $project)
     {
         if (auth()->id() !== $project->owner_id) {
