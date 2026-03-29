@@ -14,7 +14,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with('segments', 'members.user')
+        $projects = Project::with(['segments', 'members.user', 'sprints.tasks'])
             ->latest()
             ->get();
 
