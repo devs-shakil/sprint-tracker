@@ -4,7 +4,8 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
 interface Segment {
@@ -29,11 +30,23 @@ interface WorkingDay {
     date: string;
 }
 
+interface Task {
+    id: number;
+    title: string;
+    status: string;
+    priority: string;
+    estimated_hours: number;
+    segment_id: number;
+    sprint_id?: number;
+    assignee?: User;
+}
+
 interface Sprint {
     id: number;
     sprint_number: number;
     start_date: string;
     end_date: string;
+    tasks: Task[];
 }
 
 interface Project {
@@ -206,74 +219,137 @@ export default function Show({ project, developers, can }: Props) {
                         )}
                     </div>
 
-                    {/* Sprints Section */}
+                    {/* Sprints Section - Dynamic Grid */}
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0">
                             <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Calendar className="h-5 w-5" /> Project Sprints
+                                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                                    <Calendar className="h-6 w-6 text-primary" /> Project Sprint Grid
                                 </CardTitle>
-                                <CardDescription>Sprint schedule generated from working days.</CardDescription>
+                                <CardDescription>Tasks organized by segment and sprint. Mark as done or add tasks directly.</CardDescription>
                             </div>
                             {can.manage && (
-                                <div className="flex gap-2">
+                                <div className="flex gap-3">
+                                    <Button 
+                                        variant="default" 
+                                        size="sm"
+                                        onClick={() => {
+                                            if (confirm('Distribute all unassigned tasks across sprints and developers?')) {
+                                                router.post(route('projects.tasks.distribute', project.id));
+                                            }
+                                        }}
+                                        disabled={project.sprints.length === 0}
+                                        className="bg-primary hover:bg-primary/90"
+                                    >
+                                        Distribute Tasks
+                                    </Button>
                                     <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => {
-                                            if (confirm('Regenerate sprints with 6 days each?')) {
+                                            if (confirm('Regenerate sprints with 6 days each? This will clear existing sprint assignments!')) {
                                                 router.post(route('projects.sprints.store', project.id), {
                                                     days_per_sprint: 6
                                                 });
                                             }
                                         }}
                                     >
-                                        {project.sprints.length > 0 ? 'Regenerate' : 'Generate Sprints'}
+                                        {project.sprints.length > 0 ? 'Regenerate Sprints' : 'Generate Sprints'}
                                     </Button>
-                                    {project.sprints.length > 0 && (
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm"
-                                            className="text-destructive"
-                                            onClick={() => {
-                                                if (confirm('Clear all sprints?')) {
-                                                    router.delete(route('projects.sprints.destroy', project.id));
-                                                }
-                                            }}
-                                        >
-                                            Clear
-                                        </Button>
-                                    )}
                                 </div>
                             )}
                         </CardHeader>
                         <CardContent>
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="text-xs uppercase text-muted-foreground bg-muted/50">
-                                        <tr>
-                                            <th className="px-4 py-3">Sprint #</th>
-                                            <th className="px-4 py-3">Start Date</th>
-                                            <th className="px-4 py-3">End Date</th>
-                                            <th className="px-4 py-3 text-right">Duration</th>
+                            <div className="overflow-x-auto rounded-xl border bg-muted/50 shadow-inner">
+                                <table className="w-full text-sm border-collapse min-w-[800px]">
+                                    <thead>
+                                        <tr className="bg-muted text-muted-foreground uppercase text-[10px] tracking-wider font-bold border-b border-border/50">
+                                            <th className="px-4 py-3 text-left w-48 border-r border-border/50">Sprint</th>
+                                            {project.segments.map((segment) => (
+                                                <th key={segment.id} className="px-4 py-3 text-center border-r border-border/50">
+                                                    {segment.name}
+                                                </th>
+                                            ))}
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y">
+                                    <tbody className="divide-y divide-border/50">
                                         {project.sprints.length === 0 ? (
                                             <tr>
-                                                <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground italic">
-                                                    No sprints generated yet.
+                                                <td colSpan={project.segments.length + 1} className="px-4 py-12 text-center text-muted-foreground italic bg-background">
+                                                    No sprints generated yet. Use the button above to start.
                                                 </td>
                                             </tr>
                                         ) : (
                                             project.sprints.map((sprint) => (
-                                                <tr key={sprint.id} className="hover:bg-muted/30">
-                                                    <td className="px-4 py-3 font-semibold">Sprint {sprint.sprint_number}</td>
-                                                    <td className="px-4 py-3">{sprint.start_date}</td>
-                                                    <td className="px-4 py-3">{sprint.end_date}</td>
-                                                    <td className="px-4 py-3 text-right text-muted-foreground">
-                                                        Standard (6 days)
+                                                <tr key={sprint.id} className="hover:bg-muted/30 transition-colors bg-background">
+                                                    <td className="px-4 py-4 border-r border-border/50 align-top">
+                                                        <div className="font-bold text-base text-primary">Sprint {sprint.sprint_number}</div>
+                                                        <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
+                                                            <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
+                                                        </div>
                                                     </td>
+                                                    {project.segments.map((segment) => {
+                                                        const sprintTasks = sprint.tasks?.filter(t => t.segment_id === segment.id) || [];
+                                                        return (
+                                                            <td key={segment.id} className="p-2 border-r border-border/50 align-top min-w-[200px]">
+                                                                <div className="space-y-2">
+                                                                    {sprintTasks.map((task) => (
+                                                                        <div 
+                                                                            key={task.id}
+                                                                            onClick={() => {
+                                                                                if (can.manage) {
+                                                                                    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+                                                                                    router.patch(route('tasks.update-status', task.id), { status: newStatus });
+                                                                                }
+                                                                            }}
+                                                                            className={`group flex items-start gap-2 p-2 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/30 ${
+                                                                                task.status === 'completed' 
+                                                                                    ? 'bg-muted/50 border-transparent' 
+                                                                                    : 'bg-background border-border shadow-sm'
+                                                                            }`}
+                                                                        >
+                                                                            <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
+                                                                                task.status === 'completed' 
+                                                                                    ? 'bg-primary border-primary text-white' 
+                                                                                    : 'border-muted-foreground/30 group-hover:border-primary'
+                                                                            }`}>
+                                                                                {task.status === 'completed' && <span className="text-[10px]">✓</span>}
+                                                                            </div>
+                                                                            <div className="flex-1 overflow-hidden">
+                                                                                <div className={`font-medium break-words ${task.status === 'completed' ? 'line-through text-muted-foreground opacity-60' : ''}`}>
+                                                                                    {task.title}
+                                                                                </div>
+                                                                                <div className="flex items-center gap-2 mt-1">
+                                                                                    {/* {task.priority && (
+                                                                                        <span className={`text-[9px] uppercase font-bold ${
+                                                                                            task.priority === 'high' ? 'text-red-500' : 
+                                                                                            task.priority === 'medium' ? 'text-yellow-600' : 'text-blue-500'
+                                                                                        }`}>
+                                                                                            {task.priority}
+                                                                                        </span>
+                                                                                    )} */}
+                                                                                    {task.estimated_hours > 0 && (
+                                                                                        <span className="text-[9px] text-muted-foreground bg-muted px-1 rounded">
+                                                                                            {task.estimated_hours}h
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                    
+                                                                    {/* Quick Add Input */}
+                                                                    {can.manage && (
+                                                                        <QuickAddTask 
+                                                                            projectId={project.id} 
+                                                                            segmentId={segment.id} 
+                                                                            sprintId={sprint.id} 
+                                                                        />
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                        );
+                                                    })}
                                                 </tr>
                                             ))
                                         )}
@@ -346,3 +422,94 @@ export default function Show({ project, developers, can }: Props) {
         </AuthenticatedLayout>
     );
 }
+
+function QuickAddTask({ projectId, segmentId, sprintId }: { projectId: number, segmentId: number, sprintId: number }) {
+    const [isAdding, setIsAdding] = useState(false);
+    const { data, setData, post, processing, reset, errors } = useForm({
+        title: '',
+        segment_id: segmentId,
+        sprint_id: sprintId,
+        priority: 'medium',
+        estimated_hours: 0,
+    });
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post(route('projects.tasks.store', projectId), {
+            onSuccess: () => {
+                setIsAdding(false);
+                reset();
+            },
+        });
+    };
+
+    if (!isAdding) {
+        return (
+            <button 
+                onClick={() => setIsAdding(true)}
+                className="w-full py-2 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all flex items-center justify-center gap-1 group"
+            >
+                <Plus className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                <span className="text-[10px] font-medium">Add Task</span>
+            </button>
+        );
+    }
+
+    return (
+        <form onSubmit={submit} className="p-3 bg-background border rounded-lg shadow-lg space-y-3 animate-in fade-in zoom-in duration-200">
+            <div className="space-y-1">
+                <input
+                    autoFocus
+                    className="w-full bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground"
+                    placeholder="Task title..."
+                    value={data.title}
+                    onChange={e => setData('title', e.target.value)}
+                    required
+                />
+            </div>
+            <div className="flex items-center justify-between gap-2 border-t pt-2">
+                <div className="flex items-center gap-1">
+                    <select 
+                        className="text-[10px] bg-muted border-none rounded px-1 py-0.5 focus:ring-0"
+                        value={data.priority}
+                        onChange={e => setData('priority', e.target.value)}
+                    >
+                        <option value="low">Low</option>
+                        <option value="medium">Med</option>
+                        <option value="high">High</option>
+                    </select>
+                    <div className="flex items-center gap-1 bg-muted rounded px-1 py-0.5">
+                        <Clock className="h-2 w-2 text-muted-foreground" />
+                        <input 
+                            type="number" 
+                            step="0.5"
+                            className="w-6 text-[10px] bg-transparent border-none p-0 focus:ring-0"
+                            value={data.estimated_hours}
+                            onChange={e => setData('estimated_hours', parseFloat(e.target.value) || 0)}
+                        />
+                    </div>
+                </div>
+                <div className="flex items-center gap-1">
+                    <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-[10px]" 
+                        onClick={() => setIsAdding(false)}
+                    >
+                        Cancel
+                    </Button>
+                    <Button 
+                        type="submit" 
+                        size="sm" 
+                        className="h-6 px-2 text-[10px]" 
+                        disabled={processing || !data.title.trim()}
+                    >
+                        Add
+                    </Button>
+                </div>
+            </div>
+        </form>
+    );
+}
+

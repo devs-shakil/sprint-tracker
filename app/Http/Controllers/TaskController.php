@@ -20,13 +20,26 @@ class TaskController extends Controller
 
     public function index(Project $project)
     {
-        return Inertia::render('Tasks/Index', [
-            'project' => $project->load('segments', 'sprints'),
-            'tasks' => $project->tasks()->with('sprint', 'segment', 'assignee')->latest()->get(),
-            'can' => [
-                'manage' => auth()->user()?->role === 'owner' && $project->owner_id === auth()->id(),
-            ],
+        return redirect()->route('projects.show', $project->id);
+    }
+
+    public function store(Request $request, Project $project)
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'segment_id' => 'required|exists:segments,id',
+            'sprint_id' => 'nullable|exists:sprints,id',
+            'title' => 'required|string|max:255',
+            'priority' => 'required|in:low,medium,high',
+            'estimated_hours' => 'required|numeric|min:0',
         ]);
+
+        $project->tasks()->create($validated);
+
+        return back()->with('success', 'Task added successfully.');
     }
 
     public function bulkStore(Request $request, Project $project)

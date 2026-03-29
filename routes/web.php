@@ -35,8 +35,10 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
 
     // Task routes
     Route::get('projects/{project}/tasks', [TaskController::class, 'index'])->name('projects.tasks.index');
+    Route::post('projects/{project}/tasks', [TaskController::class, 'store'])->name('projects.tasks.store');
     Route::post('projects/{project}/tasks/bulk', [TaskController::class, 'bulkStore'])->name('projects.tasks.bulk');
     Route::post('projects/{project}/tasks/distribute', [TaskController::class, 'distribute'])->name('projects.tasks.distribute');
+    Route::patch('tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.update-status');
 });
 
 Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');

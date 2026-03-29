@@ -75,7 +75,14 @@ class ProjectController extends Controller
         $developers = \App\Models\User::where('role', 'developer')->get();
 
         return Inertia::render('Projects/Show', [
-            'project' => $project->load('segments', 'members.user', 'members.segment', 'workingDays', 'sprints'),
+            'project' => $project->load([
+                'segments', 
+                'members.user', 
+                'members.segment', 
+                'workingDays', 
+                'sprints.tasks.segment', 
+                'sprints.tasks.assignee'
+            ]),
             'developers' => $developers,
             'can' => [
                 'manage' => auth()->user()?->role === 'owner' && $project->owner_id === auth()->id(),
