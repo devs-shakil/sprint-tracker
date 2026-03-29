@@ -15,4 +15,9 @@ class Sprint extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 }

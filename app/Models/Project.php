@@ -43,4 +43,9 @@ class Project extends Model
     {
         return $this->hasMany(Sprint::class);
     }
+
+    public function tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
 }

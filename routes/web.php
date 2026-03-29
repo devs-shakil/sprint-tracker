@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectSprintController;
+use App\Http\Controllers\TaskController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,6 +32,11 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     // Sprint routes
     Route::post('projects/{project}/sprints', [ProjectSprintController::class, 'store'])->name('projects.sprints.store');
     Route::delete('projects/{project}/sprints', [ProjectSprintController::class, 'destroy'])->name('projects.sprints.destroy');
+
+    // Task routes
+    Route::get('projects/{project}/tasks', [TaskController::class, 'index'])->name('projects.tasks.index');
+    Route::post('projects/{project}/tasks/bulk', [TaskController::class, 'bulkStore'])->name('projects.tasks.bulk');
+    Route::post('projects/{project}/tasks/distribute', [TaskController::class, 'distribute'])->name('projects.tasks.distribute');
 });
 
 Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
