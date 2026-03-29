@@ -48,6 +48,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect($user->role === 'owner' ? route('dashboard') : route('my-tasks'));
+        return redirect(route('projects.index'));
     }
 }
