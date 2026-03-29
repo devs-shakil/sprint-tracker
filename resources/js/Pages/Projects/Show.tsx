@@ -246,67 +246,9 @@ export default function Show({ project, developers, can }: Props) {
                         )} */}
                     </div>
                     
-                    {/* Git Integration Section - Owner Only */}
+                    {/* Git Integration Section - Owner Only (Accordion) */}
                     {can.manage && (
-                        <Card className="border-primary/10 bg-primary/5 shadow-sm mb-6">
-                            <CardHeader className="py-4">
-                                <CardTitle className="text-lg flex items-center gap-2">
-                                    <GitIcon className="h-5 w-5 text-primary" /> Git Integration
-                                </CardTitle>
-                                <CardDescription>Connect GitLab or GitHub to auto-complete tasks using commit messages.</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Webhook URL</Label>
-                                        <div className="flex gap-2">
-                                            <div className="flex-1 bg-background border rounded-md px-3 py-2 text-xs font-mono truncate select-all">
-                                                {window.location.origin}/api/webhook/gitlab/{project.id}
-                                            </div>
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                className="h-8 w-8"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(`${window.location.origin}/api/webhook/gitlab/${project.id}`);
-                                                    alert('Webhook URL copied to clipboard');
-                                                }}
-                                            >
-                                                <Copy className="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Webhook Secret</Label>
-                                        <div className="flex gap-2">
-                                            <div className="flex-1 bg-background border rounded-md px-3 py-2 text-xs font-mono truncate select-all">
-                                                {project.webhook_secret || 'Not generated'}
-                                            </div>
-                                            <Button 
-                                                variant="outline" 
-                                                size="icon" 
-                                                className="h-8 w-8"
-                                                onClick={() => {
-                                                    navigator.clipboard.writeText(project.webhook_secret || '');
-                                                    alert('Secret key copied to clipboard');
-                                                }}
-                                            >
-                                                <Copy className="h-3 w-3" />
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg text-[11px] text-blue-700 leading-relaxed">
-                                    <p className="font-bold mb-1">How to use:</p>
-                                    <ul className="list-disc ml-4 space-y-1">
-                                        <li>Add the <strong>Webhook URL</strong> to your GitLab/GitHub project settings.</li>
-                                        <li>Set the <strong>Trigger</strong> to "Push events".</li>
-                                        <li>Paste the <strong>Secret</strong> into the "Secret token" field.</li>
-                                        <li>Include <code>#TASK_ID done</code> in your commit message (e.g., <code>Fixed auth bug #102 done</code>) to auto-complete tasks.</li>
-                                    </ul>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <GitAccordion project={project} />
                     )}
 
                     {/* Sprints Section - Accordion Grid */}
@@ -668,6 +610,110 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
         </Card>
     );
 }
+
+function GitAccordion({ project }: { project: Project }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+        <Card className={`overflow-hidden transition-all duration-300 mb-6 ${isOpen ? 'border-primary/20 ring-1 ring-primary/5 shadow-md' : 'border-primary/10 bg-primary/5 shadow-sm hover:bg-primary/10'}`}>
+            <div 
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center justify-between px-4 py-1 cursor-pointer transition-colors"
+            >
+                <div className="flex items-center gap-4">
+                    <div className={`p-2 rounded-lg transition-colors ${isOpen ? 'bg-primary text-white' : 'bg-primary/10 text-primary'}`}>
+                        {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                    </div>
+                    <div>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                            <GitIcon className="h-5 w-5" /> Git Integration
+                        </CardTitle>
+                        <CardDescription>Auto-complete tasks via GitLab/GitHub commits</CardDescription>
+                    </div>
+                </div>
+                {!isOpen && (
+                    <div className="hidden md:flex items-center gap-2 text-[10px] font-bold text-primary/60 uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full border border-primary/10">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                        Connected
+                    </div>
+                )}
+            </div>
+
+            {isOpen && (
+                <CardContent className="px-4 pb-6 pt-2 space-y-6 animate-in slide-in-from-top-2 duration-300">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <ExternalLink className="h-3 w-3" /> Webhook URL
+                            </Label>
+                            <div className="flex gap-2">
+                                <div className="flex-1 bg-background border rounded-lg px-3 py-2.5 text-xs font-mono truncate select-all shadow-sm">
+                                    {window.location.origin}/api/webhook/gitlab/{project.id}
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="icon" 
+                                    className="h-10 w-10 shrink-0 hover:bg-primary hover:text-white transition-all"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(`${window.location.origin}/api/webhook/gitlab/${project.id}`);
+                                        alert('Webhook URL copied to clipboard');
+                                    }}
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                        <div className="space-y-3">
+                            <Label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                <Check className="h-3 w-3" /> Webhook Secret
+                            </Label>
+                            <div className="flex gap-2">
+                                <div className="flex-1 bg-background border rounded-lg px-3 py-2.5 text-xs font-mono truncate select-all shadow-sm">
+                                    {project.webhook_secret || 'Not generated'}
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="icon" 
+                                    className="h-10 w-10 shrink-0 hover:bg-primary hover:text-white transition-all"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigator.clipboard.writeText(project.webhook_secret || '');
+                                        alert('Secret key copied to clipboard');
+                                    }}
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-4 bg-muted/30 border rounded-xl space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-bold text-foreground">
+                            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-primary text-[10px]">?</div>
+                            Setup Instructions
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground uppercase font-bold">Step 1</div>
+                                <div className="text-[11px] leading-relaxed">Add the <strong>Webhook URL</strong> to your GitLab/GitHub project settings.</div>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground uppercase font-bold">Step 2</div>
+                                <div className="text-[11px] leading-relaxed">Set the <strong>Trigger</strong> to "Push events" and paste the <strong>Secret</strong> key.</div>
+                            </div>
+                            <div className="space-y-1">
+                                <div className="text-[10px] text-muted-foreground uppercase font-bold">Step 3</div>
+                                <div className="text-[11px] leading-relaxed">Commit with <code>#TASK_ID done</code> (e.g. <code>Fix bug #102 done</code>) to auto-complete.</div>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            )}
+        </Card>
+    );
+}
+
 
 function QuickAddTask({ projectId, segmentId, sprintId }: { projectId: number, segmentId: number, sprintId: number }) {
     const [isAdding, setIsAdding] = useState(false);
