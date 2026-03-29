@@ -259,15 +259,21 @@ export default function Show({ project, developers, can }: Props) {
                                     <p>No sprints yet. Click "New Sprint" to get started.</p>
                                 </Card>
                             ) : (
-                                project.sprints.map((sprint, index) => (
-                                    <SprintAccordion 
-                                        key={sprint.id} 
-                                        sprint={sprint} 
-                                        project={project} 
-                                        can={can} 
-                                        isDefaultOpen={index === 0}
-                                    />
-                                ))
+                                project.sprints.map((sprint, index) => {
+                                    const today = new Date().toISOString().split('T')[0];
+                                    const isCurrent = today >= sprint.start_date && today <= sprint.end_date;
+                                    
+                                    return (
+                                        <SprintAccordion 
+                                            key={sprint.id} 
+                                            sprint={sprint} 
+                                            project={project} 
+                                            can={can} 
+                                            isDefaultOpen={isCurrent || (project.sprints.length > 0 && index === 0 && !project.sprints.some(s => today >= s.start_date && today <= s.end_date))}
+                                            isCurrent={isCurrent}
+                                        />
+                                    );
+                                })
                             )}
                         </CardContent>
                     </Card>
@@ -336,7 +342,7 @@ export default function Show({ project, developers, can }: Props) {
     );
 }
 
-function SprintAccordion({ sprint, project, can, isDefaultOpen = false }: { sprint: Sprint, project: Project, can: any, isDefaultOpen?: boolean }) {
+function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurrent = false }: { sprint: Sprint, project: Project, can: any, isDefaultOpen?: boolean, isCurrent?: boolean }) {
     const [isOpen, setIsOpen] = useState(isDefaultOpen);
     const [isEditingDate, setIsEditingDate] = useState(false);
     const [editDates, setEditDates] = useState({
@@ -355,19 +361,24 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false }: { spri
     const totalTasks = sprint.tasks.length;
 
     return (
-        <Card className="overflow-hidden border-border/50">
+        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'border-2 border-primary ring-2 ring-primary/10 shadow-lg' : 'border-border/50 shadow-sm'}`}>
             <div 
                 onClick={() => !isEditingDate && setIsOpen(!isOpen)}
-                className="flex items-center justify-between px-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors group"
+                className={`flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-muted/50 transition-colors group ${isCurrent ? 'bg-primary/5' : 'bg-muted/30'}`}
             >
                 <div className="flex items-center gap-4">
-                    <div className="bg-primary/10 p-2 rounded-lg">
-                        {isOpen ? <ChevronDown className="h-5 w-5 text-primary" /> : <ChevronRight className="h-5 w-5 text-primary" />}
+                    <div className={`${isCurrent ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} p-2 rounded-lg transition-colors`}>
+                        {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                     </div>
                     <div>
                         <div className="font-bold text-lg text-foreground flex items-center gap-2">
                             Sprint {sprint.sprint_number}
-                            <Badge variant="outline" className="text-[10px] h-5 bg-background font-bold border-primary/20">
+                            {isCurrent && (
+                                <Badge variant="default" className="text-[10px] h-5 bg-primary font-bold animate-pulse">
+                                    CURRENT
+                                </Badge>
+                            )}
+                            <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-background'}`}>
                                 {completedTasks}/{totalTasks} DONE
                             </Badge>
                         </div>
