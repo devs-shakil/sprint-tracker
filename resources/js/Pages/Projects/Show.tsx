@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -108,7 +108,7 @@ export default function Show({ project, developers, can }: Props) {
         >
             <Head title={project.name} />
 
-            <div className="py-3">
+            <div className="py-3 px-2">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
                     <div className={`grid grid-cols-1 ${can.manage ? 'md:grid-cols-4' : ''} gap-6`}>
                         {/* Project Info */}
@@ -220,8 +220,8 @@ export default function Show({ project, developers, can }: Props) {
                     </div>
 
                     {/* Sprints Section - Accordion Grid */}
-                    <Card className="border-none shadow-none bg-transparent">
-                        <CardHeader className="flex flex-row items-center justify-between px-0 pb-4">
+                    <Card className="px-3 border-none shadow-none bg-transparent">
+                        <CardHeader className="flex py-1 flex-row items-center justify-between px-0 pb-4">
                             <div>
                                 <CardTitle className="text-2xl font-bold flex items-center gap-2">
                                     <Calendar className="h-6 w-6 text-primary" /> Sprints
@@ -338,12 +338,27 @@ export default function Show({ project, developers, can }: Props) {
 
 function SprintAccordion({ sprint, project, can, isDefaultOpen = false }: { sprint: Sprint, project: Project, can: any, isDefaultOpen?: boolean }) {
     const [isOpen, setIsOpen] = useState(isDefaultOpen);
+    const [isEditingDate, setIsEditingDate] = useState(false);
+    const [editDates, setEditDates] = useState({
+        start_date: sprint.start_date,
+        end_date: sprint.end_date
+    });
+
+    const handleSaveDates = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        router.patch(route('projects.sprints.update', [project.id, sprint.id]), editDates, {
+            onSuccess: () => setIsEditingDate(false)
+        });
+    };
+
+    const completedTasks = sprint.tasks.filter(t => t.status === 'completed').length;
+    const totalTasks = sprint.tasks.length;
 
     return (
         <Card className="overflow-hidden border-border/50">
             <div 
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center justify-between p-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors group"
+                onClick={() => !isEditingDate && setIsOpen(!isOpen)}
+                className="flex items-center justify-between px-4 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors group"
             >
                 <div className="flex items-center gap-4">
                     <div className="bg-primary/10 p-2 rounded-lg">
@@ -352,27 +367,80 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false }: { spri
                     <div>
                         <div className="font-bold text-lg text-foreground flex items-center gap-2">
                             Sprint {sprint.sprint_number}
-                            <Badge variant="outline" className="text-[10px] h-5">
-                                {sprint.tasks.length} Tasks
+                            <Badge variant="outline" className="text-[10px] h-5 bg-background font-bold border-primary/20">
+                                {completedTasks}/{totalTasks} DONE
                             </Badge>
                         </div>
-                        <div className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
-                            <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
-                        </div>
+                        {isEditingDate ? (
+                            <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                                <input 
+                                    type="date"
+                                    value={editDates.start_date}
+                                    onChange={(e) => setEditDates({ ...editDates, start_date: e.target.value })}
+                                    className="text-[11px] h-7 w-32 border-border/50 rounded-md shadow-sm bg-background"
+                                />
+                                <span className="text-muted-foreground">–</span>
+                                <input 
+                                    type="date"
+                                    value={editDates.end_date}
+                                    onChange={(e) => setEditDates({ ...editDates, end_date: e.target.value })}
+                                    className="text-[11px] h-7 w-32 border-border/50 rounded-md shadow-sm bg-background"
+                                />
+                                <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                    onClick={handleSaveDates}
+                                >
+                                    <Check className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                    onClick={() => {
+                                        setIsEditingDate(false);
+                                        setEditDates({ start_date: sprint.start_date, end_date: sprint.end_date });
+                                    }}
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                                <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
+                                </div>
+                                {can.manage && (
+                                    <button 
+                                        className="text-primary/60 hover:text-primary transition-colors flex items-center gap-1 group/edit"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsEditingDate(true);
+                                        }}
+                                    >
+                                        <Edit2 className="h-3 w-3" />
+                                        <span className="text-[10px] opacity-0 group-hover/edit:opacity-100 transition-opacity">Edit Dates</span>
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
                 
                 <div className="flex items-center gap-6">
                     <div className="flex gap-4 text-xs">
                         <div className="flex flex-col items-end">
-                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Planned</span>
-                            <span className="font-semibold">{sprint.tasks.reduce((acc, t) => acc + (t.estimated_hours || 0), 0)}h</span>
-                        </div>
-                        <div className="flex flex-col items-end">
-                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Done</span>
-                            <span className="font-semibold text-green-600">
-                                {sprint.tasks.filter(t => t.status === 'completed').reduce((acc, t) => acc + (t.estimated_hours || 0), 0)}h
-                            </span>
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Progress</span>
+                            <div className="flex items-center gap-2 mt-1">
+                                <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden border border-border/20">
+                                    <div 
+                                        className="h-full bg-primary transition-all duration-500" 
+                                        style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
+                                    />
+                                </div>
+                                <span className="font-bold tabular-nums min-w-[3ch]">{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span>
+                            </div>
                         </div>
                     </div>
                 </div>

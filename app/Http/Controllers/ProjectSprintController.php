@@ -52,6 +52,24 @@ class ProjectSprintController extends Controller
         return back()->with('success', "Sprint $sprintNumber added.");
     }
 
+    public function update(Request $request, Project $project, $sprintId)
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403);
+        }
+
+        $sprint = $project->sprints()->findOrFail($sprintId);
+
+        $validated = $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $sprint->update($validated);
+
+        return back()->with('success', "Sprint {$sprint->sprint_number} dates updated.");
+    }
+
     public function destroy(Project $project)
     {
         if (auth()->id() !== $project->owner_id) {
