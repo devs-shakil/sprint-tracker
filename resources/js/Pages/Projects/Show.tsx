@@ -108,11 +108,11 @@ export default function Show({ project, developers, can }: Props) {
         >
             <Head title={project.name} />
 
-            <div className="py-12">
+            <div className="py-3">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-                    <div className={`grid grid-cols-1 ${can.manage ? 'md:grid-cols-3' : ''} gap-6`}>
+                    <div className={`grid grid-cols-1 ${can.manage ? 'md:grid-cols-4' : ''} gap-6`}>
                         {/* Project Info */}
-                        <Card className={can.manage ? 'md:col-span-2' : ''}>
+                        {/* <Card className={can.manage ? 'md:col-span-4' : ''}>
                             <CardHeader>
                                 <CardTitle>Overview</CardTitle>
                                 <CardDescription>Project timelines and segments.</CardDescription>
@@ -160,10 +160,10 @@ export default function Show({ project, developers, can }: Props) {
                                     </div>
                                 </div>
                             </CardContent>
-                        </Card>
+                        </Card> */}
 
                         {/* Add Member Form - Owner Only */}
-                        {can.manage && (
+                        {/* {can.manage && (
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="text-lg flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function Show({ project, developers, can }: Props) {
                                     </form>
                                 </CardContent>
                             </Card>
-                        )}
+                        )} */}
                     </div>
 
                     {/* Sprints Section - Dynamic Grid */}
@@ -243,7 +243,7 @@ export default function Show({ project, developers, can }: Props) {
                                     >
                                         Distribute Tasks
                                     </Button>
-                                    <Button 
+                                    {/* <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => {
@@ -255,7 +255,7 @@ export default function Show({ project, developers, can }: Props) {
                                         }}
                                     >
                                         {project.sprints.length > 0 ? 'Regenerate Sprints' : 'Generate Sprints'}
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             )}
                         </CardHeader>
@@ -360,7 +360,7 @@ export default function Show({ project, developers, can }: Props) {
                     </Card>
 
                     {/* Team Members List */}
-                    <Card>
+                    {/* <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Users className="h-5 w-5" /> Team Members
@@ -416,7 +416,7 @@ export default function Show({ project, developers, can }: Props) {
                                 </table>
                             </div>
                         </CardContent>
-                    </Card>
+                    </Card> */}
                 </div>
             </div>
         </AuthenticatedLayout>
@@ -458,12 +458,24 @@ function QuickAddTask({ projectId, segmentId, sprintId }: { projectId: number, s
     return (
         <form onSubmit={submit} className="p-3 bg-background border rounded-lg shadow-lg space-y-3 animate-in fade-in zoom-in duration-200">
             <div className="space-y-1">
-                <input
+                <textarea
                     autoFocus
-                    className="w-full bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground"
-                    placeholder="Task title..."
+                    className="w-full bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground resize-none min-h-[1.5rem]"
+                    placeholder="Enter task(s)... (Paste multiple lines for bulk)"
                     value={data.title}
-                    onChange={e => setData('title', e.target.value)}
+                    onChange={e => {
+                        setData('title', e.target.value);
+                        // Auto-expand
+                        e.target.style.height = 'auto';
+                        e.target.style.height = e.target.scrollHeight + 'px';
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            submit(e as any);
+                        }
+                    }}
+                    rows={1}
                     required
                 />
             </div>

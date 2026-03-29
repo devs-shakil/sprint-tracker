@@ -32,14 +32,30 @@ class TaskController extends Controller
         $validated = $request->validate([
             'segment_id' => 'required|exists:segments,id',
             'sprint_id' => 'nullable|exists:sprints,id',
-            'title' => 'required|string|max:255',
+            'title' => 'required|string',
             'priority' => 'required|in:low,medium,high',
             'estimated_hours' => 'required|numeric|min:0',
         ]);
 
-        $project->tasks()->create($validated);
+        $titles = explode("\n", $validated['title']);
+        $createdCount = 0;
 
-        return back()->with('success', 'Task added successfully.');
+        foreach ($titles as $title) {
+            $title = trim($title);
+            if (empty($title)) continue;
+
+            $project->tasks()->create([
+                'segment_id' => $validated['segment_id'],
+                'sprint_id' => $validated['sprint_id'],
+                'title' => $title,
+                'priority' => $validated['priority'],
+                'estimated_hours' => $validated['estimated_hours'],
+            ]);
+            $createdCount++;
+        }
+
+        $message = $createdCount > 1 ? "$createdCount tasks added successfully." : "Task added successfully.";
+        return back()->with('success', $message);
     }
 
     public function bulkStore(Request $request, Project $project)
