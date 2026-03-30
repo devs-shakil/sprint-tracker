@@ -112,7 +112,7 @@ export default function SprintReport({ project, sprint, segments, type }: Props)
                                             <div className="p-1 bg-primary/10 rounded-lg">
                                                 <Folder className="h-4 w-4 text-primary" />
                                             </div>
-                                            <h3 className="text-xl font-bold text-foreground">
+                                            <h3 className="text-base font-bold text-foreground">
                                                 {segment.name}
                                             </h3>
                                             <Badge variant="secondary" className="ml-auto">
@@ -120,16 +120,16 @@ export default function SprintReport({ project, sprint, segments, type }: Props)
                                             </Badge>
                                         </div>
 
-                                        <div className="grid grid-cols-1 gap-3">
+                                        <div className="grid grid-cols-1 gap-1">
                                             {segment.tasks.map((task) => (
                                                 <div 
                                                     key={task.id} 
                                                     className="flex items-start gap-4 p-1 hover:bg-muted/50 transition-colors rounded-xl border border-border/20 bg-muted/10 group"
                                                 >
-                                                    <div className="mt-1">
+                                                    <div className="">
                                                         <CheckCircle2 className="h-5 w-5 text-green-500 fill-green-500/10 group-hover:scale-110 transition-transform" />
                                                     </div>
-                                                    <div className="text-lg font-medium text-foreground leading-tight">
+                                                    <div className="text-sm font-medium text-foreground leading-tight">
                                                         {task.title}
                                                     </div>
                                                 </div>

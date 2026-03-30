@@ -499,7 +499,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm border-collapse min-w-[800px]">
                             <thead>
-                                <tr className="bg-muted/20 text-muted-foreground uppercase text-[10px] tracking-wider font-bold border-b border-border/50">
+                                <tr className="bg-muted text-muted-foreground uppercase text-sm tracking-wider font-bold border-b border-border/50">
                                     {project.segments.map((segment) => (
                                         <th key={segment.id} className="px-4 py-3 text-center border-r border-border/50 last:border-r-0">
                                             {segment.name}
@@ -513,7 +513,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                         const sprintTasks = sprint.tasks?.filter(t => t.segment_id === segment.id) || [];
                                         return (
                                             <td key={segment.id} className="p-3 border-r border-border/50 last:border-r-0 align-top min-w-[200px]">
-                                                <div className="space-y-2">
+                                                <div className="space-y-3">
                                                     {sprintTasks.map((task) => (
                                                         <div 
                                                             key={task.id}
@@ -523,15 +523,15 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                                                     router.patch(route('tasks.update-status', task.id), { status: newStatus });
                                                                 }
                                                             }}
-                                                            className={`group flex items-start gap-2 p-2.5 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/40 ${
+                                                            className={`group flex items-start gap-2 px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/40 ${
                                                                 task.status === 'completed' 
-                                                                    ? 'bg-muted/30 border-transparent' 
+                                                                    ? 'bg-green-200/30 border-transparent' 
                                                                     : 'bg-background border-border shadow-sm'
                                                             }`}
                                                         >
                                                             <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                                                                 task.status === 'completed' 
-                                                                    ? 'bg-primary border-primary text-white scale-110' 
+                                                                    ? 'bg-green-300 border-green-300 text-white scale-110' 
                                                                     : 'border-muted-foreground/30 group-hover:border-primary group-hover:scale-110'
                                                             }`}>
                                                                 {task.status === 'completed' && <span className="text-[10px]">✓</span>}
@@ -540,7 +540,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                                                 <div className={`font-medium break-words leading-relaxed ${task.status === 'completed' ? 'line-through text-muted-foreground opacity-60' : ''}`}>
                                                                     {task.title}
                                                                 </div>
-                                                                <div className="flex items-center gap-2 mt-1.5">
+                                                                {/* <div className="flex items-center gap-2 mt-1.5">
                                                                     {task.estimated_hours > 0 && (
                                                                         <span className="text-[9px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded flex items-center gap-1">
                                                                             <Clock className="h-2 w-2" /> {task.estimated_hours}h
@@ -551,7 +551,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                                                             <GitIcon className="h-2 w-2" /> {task.git_commits.length}
                                                                         </span>
                                                                     )}
-                                                                </div>
+                                                                </div> */}
                                                                 {task.git_commits && task.git_commits.length > 0 && (
                                                                     <div className="mt-2 pt-2 border-t border-dashed border-border/50 text-[10px] text-muted-foreground italic truncate">
                                                                         "{task.git_commits[task.git_commits.length - 1].message}"
