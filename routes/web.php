@@ -5,6 +5,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectSprintController;
+use App\Http\Controllers\ProjectTimelineController;
 use App\Http\Controllers\SprintGoalController;
 use App\Http\Controllers\SprintMeetingController;
 use App\Http\Controllers\SprintReportController;
@@ -47,6 +48,14 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::get('projects/{project}/reports', [SprintReportController::class, 'projectReport'])->name('projects.reports.index');
     Route::get('projects/{project}/sprints/{sprint}/report', [SprintReportController::class, 'show'])->name('projects.sprints.report');
     Route::get('projects/{project}/monthly-report', [MonthlyReportController::class, 'show'])->name('projects.monthly-report');
+
+    // Project Timeline
+    Route::get('projects/{project}/timeline', [ProjectTimelineController::class, 'show'])->name('projects.timeline');
+    Route::post('projects/{project}/timeline/segments', [ProjectTimelineController::class, 'storeSegment'])->name('projects.timeline.segments.store');
+    Route::patch('projects/{project}/timeline/segments/{segment}/note', [ProjectTimelineController::class, 'updateNote'])->name('projects.timeline.segments.note');
+    Route::post('projects/{project}/timeline/segments/{segment}/tasks', [ProjectTimelineController::class, 'storeTask'])->name('projects.timeline.tasks.store');
+    Route::patch('timeline-tasks/{task}/status', [ProjectTimelineController::class, 'updateTaskStatus'])->name('timeline-tasks.update-status');
+    Route::patch('timeline-tasks/{task}/confirmation', [ProjectTimelineController::class, 'updateTaskConfirmation'])->name('timeline-tasks.update-confirmation');
 
     // Task routes
     Route::get('projects/{project}/tasks', [TaskController::class, 'index'])->name('projects.tasks.index');

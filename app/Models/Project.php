@@ -49,4 +49,9 @@ class Project extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    public function timelineSegments()
+    {
+        return $this->hasMany(ProjectTimelineSegment::class)->orderBy('order');
+    }
 }
