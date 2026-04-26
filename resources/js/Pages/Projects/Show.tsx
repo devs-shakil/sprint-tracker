@@ -8,6 +8,14 @@ import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
+function daysUntil(dateStr: string): number {
+    return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
+}
+function isUrgent(dateStr: string): boolean {
+    const d = daysUntil(dateStr);
+    return d >= 0 && d <= 2;
+}
+
 interface Segment {
     id: number;
     name: string;
@@ -128,7 +136,7 @@ export default function Show({ project, developers, can }: Props) {
                                 <ArrowLeft className="h-4 w-4" />
                             </Link>
                         </Button>
-                        <h2 className="text-xl font-semibold leading-tight text-foreground">
+                        <h2 className="font-serif text-2xl font-normal leading-tight text-foreground tracking-tight">
                             {project.name}
                         </h2>
                     </div>
@@ -157,7 +165,7 @@ export default function Show({ project, developers, can }: Props) {
             <Head title={project.name} />
 
             <div className="py-3 px-2">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                <div className="max-w-[1600px] mx-auto sm:px-6 lg:px-8 space-y-6">
                     <div className={`grid grid-cols-1 ${can.manage ? 'md:grid-cols-4' : ''} gap-6`}>
                         {/* Project Info */}
                         {/* <Card className={can.manage ? 'md:col-span-4' : ''}>
@@ -276,7 +284,7 @@ export default function Show({ project, developers, can }: Props) {
                     <Card className="px-3 border-none shadow-none bg-transparent">
                         <CardHeader className="flex py-1 flex-row items-center justify-between px-0 pb-4">
                             <div>
-                                <CardTitle className="text-2xl font-bold flex items-center gap-2">
+                                <CardTitle className="font-serif text-3xl font-normal flex items-center gap-2 tracking-tight">
                                     <Calendar className="h-6 w-6 text-primary" /> Sprints
                                 </CardTitle>
                                 <CardDescription>Manage your project sprints and tasks.</CardDescription>
@@ -413,66 +421,77 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
     const completedTasks = sprint.tasks.filter(t => t.status === 'completed').length;
     const totalTasks = sprint.tasks.length;
 
+    const endUrgent = sprint.status !== 'completed' && isUrgent(sprint.end_date);
+    const endDays   = daysUntil(sprint.end_date);
+    const overdue   = sprint.status !== 'completed' && endDays < 0;
+
     return (
-        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'border-2 border-primary ring-2 ring-primary/10 shadow-lg' : 'border-border/50 shadow-sm'}`}>
-            <div 
+        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'border-2 border-primary shadow-lg animate-pulse-glow' : 'border-border/50 shadow-sm'}`}>
+            <div
                 onClick={() => !isEditingDate && setIsOpen(!isOpen)}
-                className={`flex items-center justify-between px-4 py-4 cursor-pointer hover:bg-muted/50 transition-colors group ${isCurrent ? 'bg-primary/5' : 'bg-muted/30'}`}
+                className={`flex items-center justify-between px-5 py-5 cursor-pointer hover:bg-muted/50 transition-colors group ${isCurrent ? 'bg-primary/5' : 'bg-muted/30'}`}
             >
                 <div className="flex items-center gap-4">
-                    <div className={`${isCurrent ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} p-2 rounded-lg transition-colors`}>
+                    <div className={`${isCurrent ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} p-2.5 rounded-xl transition-colors`}>
                         {isOpen ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
                     </div>
                     <div>
-                        <div className="font-bold text-lg text-foreground flex items-center gap-2">
+                        <div className="font-serif text-2xl font-normal text-foreground flex items-center gap-2 leading-none mb-1">
                             Sprint {sprint.sprint_number}
                             {sprint.status === 'completed' ? (
-                                <Badge variant="secondary" className="text-[10px] h-5 bg-green-100 text-green-700 border-green-200 font-bold">
+                                <Badge variant="secondary" className="text-[10px] h-5 bg-green-500/20 text-green-400 border-green-500/30 font-bold font-sans">
                                     COMPLETED
                                 </Badge>
                             ) : isCurrent && (
-                                <Badge variant="default" className="text-[10px] h-5 bg-primary font-bold animate-pulse">
+                                <Badge variant="default" className="text-[10px] h-5 bg-primary font-bold font-sans animate-pulse">
                                     CURRENT
                                 </Badge>
                             )}
-                            <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-background'}`}>
+                            {(overdue || endUrgent) && (
+                                <Badge className={`text-[10px] h-5 font-bold font-sans flex items-center gap-1 ${overdue ? 'bg-red-600 text-white' : 'bg-red-500/20 text-red-400 border-red-500/30 animate-pulse'}`}>
+                                    <AlertTriangle className="h-2.5 w-2.5" />
+                                    {overdue ? 'OVERDUE' : `${endDays}d left`}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 font-sans ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-background'}`}>
                                 {completedTasks}/{totalTasks} DONE
                             </Badge>
                             {sprint.goals.length > 0 && (
-                                <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 flex items-center gap-1 ${sprint.goals.filter(g => g.is_completed).length === sprint.goals.length ? 'bg-green-50 text-green-700 border-green-200' : 'bg-background'}`}>
+                                <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 flex items-center gap-1 font-sans ${sprint.goals.filter(g => g.is_completed).length === sprint.goals.length ? 'bg-green-50 text-green-700 border-green-200' : 'bg-background'}`}>
                                     <Target className="h-2.5 w-2.5" />
                                     {sprint.goals.filter(g => g.is_completed).length}/{sprint.goals.length} GOALS
                                 </Badge>
                             )}
                         </div>
                         {isEditingDate ? (
-// ... (rest of editing code exactly as is)
                             <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
-                                <input 
+                                <input
                                     type="date"
                                     value={editDates.start_date}
                                     onChange={(e) => setEditDates({ ...editDates, start_date: e.target.value })}
                                     className="text-[11px] h-7 w-32 border-border/50 rounded-md shadow-sm bg-background"
                                 />
                                 <span className="text-muted-foreground">–</span>
-                                <input 
+                                <input
                                     type="date"
                                     value={editDates.end_date}
                                     onChange={(e) => setEditDates({ ...editDates, end_date: e.target.value })}
                                     className="text-[11px] h-7 w-32 border-border/50 rounded-md shadow-sm bg-background"
                                 />
-                                <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-7 w-7 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-green-400 hover:text-green-300 hover:bg-green-500/10"
                                     onClick={handleSaveDates}
                                 >
                                     <Check className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                    size="icon" 
-                                    variant="ghost" 
-                                    className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                     onClick={() => {
                                         setIsEditingDate(false);
                                         setEditDates({ start_date: sprint.start_date, end_date: sprint.end_date });
@@ -482,12 +501,12 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                 </Button>
                             </div>
                         ) : (
-                            <div className="text-xs text-muted-foreground flex items-center gap-2 mt-0.5">
+                            <div className={`text-xs flex items-center gap-2 mt-1.5 ${overdue ? 'text-red-500' : endUrgent ? 'text-red-500' : 'text-muted-foreground'}`}>
                                 <div className="flex items-center gap-1">
                                     <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
                                 </div>
                                 {can.manage && (
-                                    <button 
+                                    <button
                                         className="text-primary/60 hover:text-primary transition-colors flex items-center gap-1 group/edit"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -495,26 +514,26 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                         }}
                                     >
                                         <Edit2 className="h-3 w-3" />
-                                        <span className="text-[10px] opacity-0 group-hover/edit:opacity-100 transition-opacity">Edit Dates</span>
+                                        <span className="text-[10px] opacity-0 group-hover/edit:opacity-100 transition-opacity">Edit</span>
                                     </button>
                                 )}
                             </div>
                         )}
                     </div>
                 </div>
-                
+
                 <div className="flex items-center gap-6">
                     <div className="flex gap-4 text-xs">
                         <div className="flex flex-col items-end">
-                            <span className="text-muted-foreground uppercase text-[9px] font-bold">Progress</span>
-                            <div className="flex items-center gap-2 mt-1">
-                                <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden border border-border/20">
-                                    <div 
-                                        className="h-full bg-primary transition-all duration-500" 
+                            <span className="text-muted-foreground uppercase text-[9px] font-bold tracking-widest">Progress</span>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <div className="w-28 h-2 bg-muted rounded-full overflow-hidden border border-border/20">
+                                    <div
+                                        className={`h-full transition-all duration-500 rounded-full ${sprint.status === 'completed' ? 'bg-green-500' : 'bg-primary'}`}
                                         style={{ width: `${totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0}%` }}
                                     />
                                 </div>
-                                <span className="font-bold tabular-nums min-w-[3ch]">{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span>
+                                <span className="font-bold tabular-nums text-sm min-w-[3ch]">{totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0}%</span>
                             </div>
                         </div>
                     </div>
@@ -552,13 +571,13 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                                             }}
                                                             className={`group flex items-start gap-2 px-2.5 py-1 rounded-lg border text-xs cursor-pointer transition-all hover:shadow-md hover:border-primary/40 ${
                                                                 task.status === 'completed' 
-                                                                    ? 'bg-green-200/30 border-transparent' 
+                                                                    ? 'bg-green-500/10 border-green-500/20'
                                                                     : 'bg-background border-border shadow-sm'
                                                             }`}
                                                         >
                                                             <div className={`mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                                                                 task.status === 'completed' 
-                                                                    ? 'bg-green-300 border-green-300 text-white scale-110' 
+                                                                    ? 'bg-green-500 border-green-500 text-white scale-110'
                                                                     : 'border-muted-foreground/30 group-hover:border-primary group-hover:scale-110'
                                                             }`}>
                                                                 {task.status === 'completed' && <span className="text-[10px]">✓</span>}
@@ -610,16 +629,15 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                     <BlockersSection sprint={sprint} project={project} can={can} />
 
                     {/* Sprint Actions Footer */}
-                    <div className="p-4 bg-muted/20 border-t border-border/50 flex justify-between items-center">
-                        <Button variant="outline" size="sm" asChild className="border-primary/20 hover:bg-primary/5">
+                    <div className="px-5 py-4 bg-muted/20 border-t border-border/50 flex justify-between items-center">
+                        <Button variant="outline" asChild className="border-primary/20 hover:bg-primary/5">
                             <Link href={route('projects.sprints.report', [project.id, sprint.id])} className="flex items-center">
                                 <FileText className="mr-2 h-4 w-4 text-primary" /> View Sprint Report
                             </Link>
                         </Button>
-                        
+
                         {can.manage && sprint.status !== 'completed' && (
-                            <Button 
-                                size="sm" 
+                            <Button
                                 className="bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-900/10"
                                 onClick={() => {
                                     if (confirm('Are you sure you want to complete this sprint? Incomplete tasks will be carried over to the next sprint.')) {
@@ -632,7 +650,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                         )}
 
                         {sprint.status === 'completed' && (
-                            <div className="text-xs font-bold text-green-600 flex items-center gap-1.5 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+                            <div className="text-sm font-bold text-green-400 flex items-center gap-1.5 bg-green-500/10 px-4 py-2 rounded-full border border-green-500/20">
                                 <CheckCircle2 className="h-4 w-4" /> Sprint Completed
                             </div>
                         )}
@@ -662,16 +680,18 @@ function GoalsSection({ sprint, project, can }: { sprint: Sprint; project: Proje
     };
 
     return (
-        <div className="border-t border-border/50">
+        <div className="border-t border-border/50 border-l-4 border-l-violet-400">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-violet-500/10 transition-colors text-left bg-gradient-to-r from-violet-500/10 to-transparent"
             >
-                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-                    <Target className="h-3.5 w-3.5 text-primary" />
+                <div className="flex items-center gap-2.5 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <div className="w-6 h-6 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0">
+                        <Target className="h-3.5 w-3.5 text-violet-400" />
+                    </div>
                     Weekly Goals
                     {totalGoals > 0 && (
-                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${completedGoals === totalGoals ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${completedGoals === totalGoals ? 'bg-green-500/20 text-green-400' : 'bg-violet-500/20 text-violet-400'}`}>
                             {completedGoals}/{totalGoals}
                         </span>
                     )}
@@ -680,19 +700,22 @@ function GoalsSection({ sprint, project, can }: { sprint: Sprint; project: Proje
             </button>
 
             {open && (
-                <div className="px-4 pb-3 space-y-1.5 animate-in slide-in-from-top-1 duration-150">
+                <div className="px-5 pb-4 pt-1 space-y-1.5 animate-in slide-in-from-top-1 duration-150">
                     {sprint.goals.length === 0 && !adding && (
-                        <p className="text-[11px] text-muted-foreground italic py-1">No goals set for this sprint.</p>
+                        <div className="flex items-center gap-2 py-3 text-muted-foreground">
+                            <Target className="h-4 w-4 text-violet-500/50" />
+                            <span className="text-[12px]">No goals set for this sprint.</span>
+                        </div>
                     )}
                     {sprint.goals.map((goal) => (
-                        <div key={goal.id} className="flex items-center gap-2 group">
+                        <div key={goal.id} className="flex items-center gap-2.5 group px-2 py-1.5 rounded-lg hover:bg-violet-500/10 transition-colors">
                             <button
                                 onClick={() => can.manage && router.patch(route('sprint-goals.toggle', goal.id))}
-                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${goal.is_completed ? 'bg-green-400 border-green-400 text-white' : 'border-muted-foreground/40 hover:border-primary'} ${can.manage ? 'cursor-pointer' : 'cursor-default'}`}
+                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${goal.is_completed ? 'bg-green-400 border-green-400 text-white' : 'border-violet-300 hover:border-violet-500'} ${can.manage ? 'cursor-pointer' : 'cursor-default'}`}
                             >
                                 {goal.is_completed && <span className="text-[9px] font-bold">✓</span>}
                             </button>
-                            <span className={`text-xs flex-1 ${goal.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                            <span className={`text-xs flex-1 ${goal.is_completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
                                 {goal.title}
                             </span>
                             {can.manage && (
@@ -714,15 +737,15 @@ function GoalsSection({ sprint, project, can }: { sprint: Sprint; project: Proje
                                     value={newGoal}
                                     onChange={e => setNewGoal(e.target.value)}
                                     placeholder="Enter a goal..."
-                                    className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                    className="flex-1 text-xs bg-background border border-violet-500/30 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500/40"
                                 />
-                                <Button type="submit" size="sm" className="h-6 px-2 text-[10px]" disabled={saving || !newGoal.trim()}>Add</Button>
-                                <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => { setAdding(false); setNewGoal(''); }}>Cancel</Button>
+                                <Button type="submit" size="sm" className="h-7 px-3 text-[11px] bg-violet-600 hover:bg-violet-700 text-white" disabled={saving || !newGoal.trim()}>Add</Button>
+                                <Button type="button" size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => { setAdding(false); setNewGoal(''); }}>Cancel</Button>
                             </form>
                         ) : (
                             <button
                                 onClick={() => setAdding(true)}
-                                className="flex items-center gap-1 text-[11px] text-primary/60 hover:text-primary transition-colors pt-0.5"
+                                className="flex items-center gap-1.5 text-[11px] text-violet-600/70 hover:text-violet-700 transition-colors pt-1 font-medium"
                             >
                                 <Plus className="h-3 w-3" /> Add Goal
                             </button>
@@ -750,16 +773,18 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
     };
 
     return (
-        <div className="border-t border-border/50">
+        <div className="border-t border-border/50 border-l-4 border-l-blue-400">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-500/10 transition-colors text-left bg-gradient-to-r from-blue-500/10 to-transparent"
             >
-                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                <div className="flex items-center gap-2.5 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <div className="w-6 h-6 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <MessageSquare className="h-3.5 w-3.5 text-blue-400" />
+                    </div>
                     Meeting Log
                     {sprint.meetings.length > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-400">
                             {sprint.meetings.length}
                         </span>
                     )}
@@ -768,14 +793,17 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
             </button>
 
             {open && (
-                <div className="px-4 pb-3 space-y-3 animate-in slide-in-from-top-1 duration-150">
+                <div className="px-5 pb-4 pt-1 space-y-3 animate-in slide-in-from-top-1 duration-150">
                     {sprint.meetings.length === 0 && !adding && (
-                        <p className="text-[11px] text-muted-foreground italic py-1">No meetings logged this sprint.</p>
+                        <div className="flex items-center gap-2 py-3 text-muted-foreground">
+                            <MessageSquare className="h-4 w-4 text-blue-500/50" />
+                            <span className="text-[12px]">No meetings logged this sprint.</span>
+                        </div>
                     )}
                     {sprint.meetings.map((meeting) => (
-                        <div key={meeting.id} className="bg-muted/30 border border-border/50 rounded-lg p-3 space-y-1.5 group relative">
+                        <div key={meeting.id} className="bg-card border border-border/60 border-l-2 border-l-blue-400 rounded-lg p-3 space-y-1.5 group relative shadow-sm">
                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider flex items-center gap-1">
+                                <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider flex items-center gap-1.5 bg-blue-500/20 px-2 py-0.5 rounded-full">
                                     <Calendar className="h-3 w-3" /> {meeting.meeting_date}
                                 </span>
                                 {can.manage && (
@@ -787,12 +815,12 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
                                     </button>
                                 )}
                             </div>
-                            <p className="text-xs font-medium text-foreground">{meeting.summary}</p>
+                            <p className="text-xs font-medium text-foreground leading-relaxed">{meeting.summary}</p>
                             {meeting.decisions && meeting.decisions.length > 0 && (
-                                <ul className="space-y-0.5 pt-1">
+                                <ul className="space-y-1 pt-1.5 border-t border-dashed border-border/40">
                                     {meeting.decisions.map((d, i) => (
                                         <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
-                                            <span className="text-primary mt-0.5 shrink-0">•</span> {d}
+                                            <span className="text-blue-400 mt-0.5 shrink-0">›</span> {d}
                                         </li>
                                     ))}
                                 </ul>
@@ -802,14 +830,14 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
 
                     {can.manage && (
                         adding ? (
-                            <form onSubmit={submitMeeting} className="space-y-2 bg-muted/20 border border-border/50 rounded-lg p-3 animate-in fade-in duration-150">
+                            <form onSubmit={submitMeeting} className="space-y-2.5 bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 animate-in fade-in duration-150">
                                 <div className="flex items-center gap-2">
                                     <label className="text-[10px] font-bold text-muted-foreground uppercase w-16 shrink-0">Date</label>
                                     <input
                                         type="date"
                                         value={form.meeting_date}
                                         onChange={e => setForm({ ...form, meeting_date: e.target.value })}
-                                        className="text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                        className="text-xs bg-background border border-blue-500/30 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
                                         required
                                     />
                                 </div>
@@ -821,7 +849,7 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
                                         onChange={e => setForm({ ...form, summary: e.target.value })}
                                         placeholder="What was discussed?"
                                         rows={2}
-                                        className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                        className="flex-1 text-xs bg-background border border-blue-500/30 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/40 resize-none"
                                         required
                                     />
                                 </div>
@@ -832,18 +860,18 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
                                         onChange={e => setForm({ ...form, decisions: e.target.value })}
                                         placeholder="One decision per line..."
                                         rows={2}
-                                        className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                        className="flex-1 text-xs bg-background border border-blue-500/30 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500/40 resize-none"
                                     />
                                 </div>
                                 <div className="flex justify-end gap-2">
-                                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setAdding(false)}>Cancel</Button>
-                                    <Button type="submit" size="sm" className="h-6 px-2 text-[10px]" disabled={saving || !form.summary.trim()}>Log Meeting</Button>
+                                    <Button type="button" size="sm" variant="ghost" className="h-7 px-3 text-[11px]" onClick={() => setAdding(false)}>Cancel</Button>
+                                    <Button type="submit" size="sm" className="h-7 px-3 text-[11px] bg-blue-600 hover:bg-blue-700 text-white" disabled={saving || !form.summary.trim()}>Log Meeting</Button>
                                 </div>
                             </form>
                         ) : (
                             <button
                                 onClick={() => setAdding(true)}
-                                className="flex items-center gap-1 text-[11px] text-primary/60 hover:text-primary transition-colors"
+                                className="flex items-center gap-1.5 text-[11px] text-blue-600/70 hover:text-blue-700 transition-colors font-medium"
                             >
                                 <Plus className="h-3 w-3" /> Log Meeting
                             </button>
@@ -875,16 +903,18 @@ function BlockersSection({ sprint, project, can }: { sprint: Sprint; project: Pr
     };
 
     return (
-        <div className="border-t border-border/50">
+        <div className="border-t border-border/50 border-l-4 border-l-amber-400">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-amber-500/10 transition-colors text-left bg-gradient-to-r from-amber-500/10 to-transparent"
             >
-                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
-                    <AlertTriangle className={`h-3.5 w-3.5 ${incompleteTasks > 0 ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                <div className="flex items-center gap-2.5 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 ${incompleteTasks > 0 ? 'bg-amber-500/20' : 'bg-muted'}`}>
+                        <AlertTriangle className={`h-3.5 w-3.5 ${incompleteTasks > 0 ? 'text-amber-400' : 'text-muted-foreground'}`} />
+                    </div>
                     Blockers &amp; Incomplete Reasons
                     {incompleteTasks > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">
                             {incompleteTasks} incomplete
                         </span>
                     )}
@@ -893,24 +923,27 @@ function BlockersSection({ sprint, project, can }: { sprint: Sprint; project: Pr
             </button>
 
             {open && (
-                <div className="px-4 pb-3 space-y-2 animate-in slide-in-from-top-1 duration-150">
+                <div className="px-5 pb-4 pt-1 space-y-2.5 animate-in slide-in-from-top-1 duration-150">
                     {!can.manage && !sprint.completion_note && (
-                        <p className="text-[11px] text-muted-foreground italic py-1">No blockers logged.</p>
+                        <div className="flex items-center gap-2 py-3 text-muted-foreground">
+                            <AlertTriangle className="h-4 w-4 text-amber-500/50" />
+                            <span className="text-[12px]">No blockers logged.</span>
+                        </div>
                     )}
                     {can.manage ? (
-                        <div className="space-y-2">
+                        <div className="space-y-2.5">
                             <textarea
                                 value={note}
                                 onChange={e => setNote(e.target.value)}
                                 placeholder="Log blockers, reasons for incomplete tasks, or any notes about what prevented completion..."
                                 rows={3}
-                                className="w-full text-xs bg-background border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                className="w-full text-xs bg-amber-500/5 border border-amber-500/20 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-amber-500/40 resize-none placeholder:text-amber-500/40"
                             />
                             <div className="flex justify-end">
                                 <Button
                                     size="sm"
                                     variant={saved ? 'outline' : 'default'}
-                                    className={`h-6 px-3 text-[10px] ${saved ? 'text-green-600 border-green-300' : ''}`}
+                                    className={`h-8 px-4 text-[11px] ${saved ? 'text-green-400 border-green-500/40' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
                                     onClick={saveNote}
                                     disabled={saving}
                                 >
@@ -919,7 +952,7 @@ function BlockersSection({ sprint, project, can }: { sprint: Sprint; project: Pr
                             </div>
                         </div>
                     ) : sprint.completion_note ? (
-                        <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 whitespace-pre-wrap">
+                        <p className="text-xs text-amber-300 bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3 whitespace-pre-wrap leading-relaxed">
                             {sprint.completion_note}
                         </p>
                     ) : null}

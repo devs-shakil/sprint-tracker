@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const defaultTheme = require("tailwindcss/defaultTheme");
+
 module.exports = {
   darkMode: ["class"],
   content: [
@@ -16,6 +18,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ["Figtree", ...defaultTheme.fontFamily.sans],
+        serif: ["Instrument Serif", ...defaultTheme.fontFamily.serif],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -65,10 +71,20 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(187 33% 32% / 0.5)" },
+          "50%":       { boxShadow: "0 0 0 10px hsl(187 33% 32% / 0)" },
+        },
+        "pulse-red": {
+          "0%, 100%": { boxShadow: "0 0 0 0 hsl(0 70% 55% / 0.45)" },
+          "50%":       { boxShadow: "0 0 0 8px hsl(0 70% 55% / 0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "pulse-red":  "pulse-red 1.5s ease-in-out infinite",
       },
     },
   },
