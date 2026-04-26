@@ -14,7 +14,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with(['segments', 'members.user', 'sprints.tasks'])
+        $projects = Project::with(['segments', 'members.user', 'sprints.tasks', 'sprints.goals'])
             ->latest()
             ->get();
 
@@ -77,13 +77,15 @@ class ProjectController extends Controller
 
         return Inertia::render('Projects/Show', [
             'project' => $project->load([
-                'segments', 
-                'members.user', 
-                'members.segment', 
-                'workingDays', 
-                'sprints.tasks.segment', 
+                'segments',
+                'members.user',
+                'members.segment',
+                'workingDays',
+                'sprints.tasks.segment',
                 'sprints.tasks.assignee',
-                'sprints.tasks.gitCommits'
+                'sprints.tasks.gitCommits',
+                'sprints.goals',
+                'sprints.meetings',
             ]),
             'developers' => $developers,
             'can' => [

@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText, GitCommit as GitIcon, Copy, ExternalLink, Github, Gitlab } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText, GitCommit as GitIcon, Copy, ExternalLink, Github, Gitlab, Target, MessageSquare, AlertTriangle, Minus, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -50,13 +50,29 @@ interface Task {
     git_commits?: GitCommit[];
 }
 
+interface SprintGoal {
+    id: number;
+    title: string;
+    is_completed: boolean;
+}
+
+interface SprintMeeting {
+    id: number;
+    meeting_date: string;
+    summary: string;
+    decisions: string[];
+}
+
 interface Sprint {
     id: number;
     sprint_number: number;
     start_date: string;
     end_date: string;
     status: string;
+    completion_note?: string;
     tasks: Task[];
+    goals: SprintGoal[];
+    meetings: SprintMeeting[];
 }
 
 interface Project {
@@ -119,6 +135,11 @@ export default function Show({ project, developers, can }: Props) {
                     <div className="flex items-center gap-3">
                         {can.manage && (
                             <>
+                                <Button variant="outline" className="border-primary/20 hover:bg-primary/5" asChild>
+                                    <Link href={route('projects.monthly-report', project.id)} className="flex items-center">
+                                        <BarChart3 className="mr-2 h-4 w-4 text-primary" /> Monthly Report
+                                    </Link>
+                                </Button>
                                 <Button variant="outline" className="border-primary/20 hover:bg-primary/5" asChild>
                                     <Link href={route('projects.reports.index', project.id)} className="flex items-center">
                                         <FileText className="mr-2 h-4 w-4 text-primary" /> Project Report
@@ -247,7 +268,7 @@ export default function Show({ project, developers, can }: Props) {
                     </div>
                     
                     {/* Git Integration Section - Owner Only (Accordion) */}
-                    {can.manage && (
+                    {false && can.manage && (
                         <GitAccordion project={project} />
                     )}
 
@@ -262,7 +283,7 @@ export default function Show({ project, developers, can }: Props) {
                             </div>
                             {can.manage && (
                                 <div className="flex gap-2">
-                                    <Button 
+                                    {/* <Button 
                                         variant="outline" 
                                         size="sm"
                                         onClick={() => {
@@ -273,7 +294,7 @@ export default function Show({ project, developers, can }: Props) {
                                         disabled={project.sprints.length === 0}
                                     >
                                         Distribute Tasks
-                                    </Button>
+                                    </Button> */}
                                     <Button 
                                         variant="default" 
                                         size="sm"
@@ -417,6 +438,12 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                             <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 ${isCurrent ? 'bg-primary/10 text-primary' : 'bg-background'}`}>
                                 {completedTasks}/{totalTasks} DONE
                             </Badge>
+                            {sprint.goals.length > 0 && (
+                                <Badge variant="outline" className={`text-[10px] h-5 font-bold border-primary/20 flex items-center gap-1 ${sprint.goals.filter(g => g.is_completed).length === sprint.goals.length ? 'bg-green-50 text-green-700 border-green-200' : 'bg-background'}`}>
+                                    <Target className="h-2.5 w-2.5" />
+                                    {sprint.goals.filter(g => g.is_completed).length}/{sprint.goals.length} GOALS
+                                </Badge>
+                            )}
                         </div>
                         {isEditingDate ? (
 // ... (rest of editing code exactly as is)
@@ -577,6 +604,11 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                         </table>
                     </div>
 
+                    {/* Weekly Goals, Meeting Log, Blockers */}
+                    <GoalsSection sprint={sprint} project={project} can={can} />
+                    <MeetingSection sprint={sprint} project={project} can={can} />
+                    <BlockersSection sprint={sprint} project={project} can={can} />
+
                     {/* Sprint Actions Footer */}
                     <div className="p-4 bg-muted/20 border-t border-border/50 flex justify-between items-center">
                         <Button variant="outline" size="sm" asChild className="border-primary/20 hover:bg-primary/5">
@@ -608,6 +640,292 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                 </CardContent>
             )}
         </Card>
+    );
+}
+
+function GoalsSection({ sprint, project, can }: { sprint: Sprint; project: Project; can: any }) {
+    const [open, setOpen] = useState(true);
+    const [adding, setAdding] = useState(false);
+    const [newGoal, setNewGoal] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    const completedGoals = sprint.goals.filter(g => g.is_completed).length;
+    const totalGoals = sprint.goals.length;
+
+    const submitGoal = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newGoal.trim()) return;
+        setSaving(true);
+        router.post(route('sprint-goals.store', [project.id, sprint.id]), { title: newGoal }, {
+            onFinish: () => { setSaving(false); setAdding(false); setNewGoal(''); },
+        });
+    };
+
+    return (
+        <div className="border-t border-border/50">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+            >
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <Target className="h-3.5 w-3.5 text-primary" />
+                    Weekly Goals
+                    {totalGoals > 0 && (
+                        <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${completedGoals === totalGoals ? 'bg-green-100 text-green-700' : 'bg-primary/10 text-primary'}`}>
+                            {completedGoals}/{totalGoals}
+                        </span>
+                    )}
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? '' : '-rotate-90'}`} />
+            </button>
+
+            {open && (
+                <div className="px-4 pb-3 space-y-1.5 animate-in slide-in-from-top-1 duration-150">
+                    {sprint.goals.length === 0 && !adding && (
+                        <p className="text-[11px] text-muted-foreground italic py-1">No goals set for this sprint.</p>
+                    )}
+                    {sprint.goals.map((goal) => (
+                        <div key={goal.id} className="flex items-center gap-2 group">
+                            <button
+                                onClick={() => can.manage && router.patch(route('sprint-goals.toggle', goal.id))}
+                                className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all ${goal.is_completed ? 'bg-green-400 border-green-400 text-white' : 'border-muted-foreground/40 hover:border-primary'} ${can.manage ? 'cursor-pointer' : 'cursor-default'}`}
+                            >
+                                {goal.is_completed && <span className="text-[9px] font-bold">✓</span>}
+                            </button>
+                            <span className={`text-xs flex-1 ${goal.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+                                {goal.title}
+                            </span>
+                            {can.manage && (
+                                <button
+                                    onClick={() => router.delete(route('sprint-goals.destroy', goal.id))}
+                                    className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                                >
+                                    <Minus className="h-3 w-3" />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+
+                    {can.manage && (
+                        adding ? (
+                            <form onSubmit={submitGoal} className="flex items-center gap-2 pt-1">
+                                <input
+                                    autoFocus
+                                    value={newGoal}
+                                    onChange={e => setNewGoal(e.target.value)}
+                                    placeholder="Enter a goal..."
+                                    className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                />
+                                <Button type="submit" size="sm" className="h-6 px-2 text-[10px]" disabled={saving || !newGoal.trim()}>Add</Button>
+                                <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => { setAdding(false); setNewGoal(''); }}>Cancel</Button>
+                            </form>
+                        ) : (
+                            <button
+                                onClick={() => setAdding(true)}
+                                className="flex items-center gap-1 text-[11px] text-primary/60 hover:text-primary transition-colors pt-0.5"
+                            >
+                                <Plus className="h-3 w-3" /> Add Goal
+                            </button>
+                        )
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Project; can: any }) {
+    const [open, setOpen] = useState(false);
+    const [adding, setAdding] = useState(false);
+    const [form, setForm] = useState({ meeting_date: new Date().toISOString().split('T')[0], summary: '', decisions: '' });
+    const [saving, setSaving] = useState(false);
+
+    const submitMeeting = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.summary.trim()) return;
+        setSaving(true);
+        router.post(route('sprint-meetings.store', [project.id, sprint.id]), form, {
+            onFinish: () => { setSaving(false); setAdding(false); setForm({ meeting_date: new Date().toISOString().split('T')[0], summary: '', decisions: '' }); },
+        });
+    };
+
+    return (
+        <div className="border-t border-border/50">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+            >
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <MessageSquare className="h-3.5 w-3.5 text-primary" />
+                    Meeting Log
+                    {sprint.meetings.length > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                            {sprint.meetings.length}
+                        </span>
+                    )}
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? '' : '-rotate-90'}`} />
+            </button>
+
+            {open && (
+                <div className="px-4 pb-3 space-y-3 animate-in slide-in-from-top-1 duration-150">
+                    {sprint.meetings.length === 0 && !adding && (
+                        <p className="text-[11px] text-muted-foreground italic py-1">No meetings logged this sprint.</p>
+                    )}
+                    {sprint.meetings.map((meeting) => (
+                        <div key={meeting.id} className="bg-muted/30 border border-border/50 rounded-lg p-3 space-y-1.5 group relative">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-bold text-primary/70 uppercase tracking-wider flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" /> {meeting.meeting_date}
+                                </span>
+                                {can.manage && (
+                                    <button
+                                        onClick={() => router.delete(route('sprint-meetings.destroy', meeting.id))}
+                                        className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive transition-all"
+                                    >
+                                        <Minus className="h-3 w-3" />
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs font-medium text-foreground">{meeting.summary}</p>
+                            {meeting.decisions && meeting.decisions.length > 0 && (
+                                <ul className="space-y-0.5 pt-1">
+                                    {meeting.decisions.map((d, i) => (
+                                        <li key={i} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                            <span className="text-primary mt-0.5 shrink-0">•</span> {d}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    ))}
+
+                    {can.manage && (
+                        adding ? (
+                            <form onSubmit={submitMeeting} className="space-y-2 bg-muted/20 border border-border/50 rounded-lg p-3 animate-in fade-in duration-150">
+                                <div className="flex items-center gap-2">
+                                    <label className="text-[10px] font-bold text-muted-foreground uppercase w-16 shrink-0">Date</label>
+                                    <input
+                                        type="date"
+                                        value={form.meeting_date}
+                                        onChange={e => setForm({ ...form, meeting_date: e.target.value })}
+                                        className="text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <label className="text-[10px] font-bold text-muted-foreground uppercase w-16 shrink-0 pt-1">Summary</label>
+                                    <textarea
+                                        autoFocus
+                                        value={form.summary}
+                                        onChange={e => setForm({ ...form, summary: e.target.value })}
+                                        placeholder="What was discussed?"
+                                        rows={2}
+                                        className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <label className="text-[10px] font-bold text-muted-foreground uppercase w-16 shrink-0 pt-1">Decisions</label>
+                                    <textarea
+                                        value={form.decisions}
+                                        onChange={e => setForm({ ...form, decisions: e.target.value })}
+                                        placeholder="One decision per line..."
+                                        rows={2}
+                                        className="flex-1 text-xs bg-background border border-border rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button type="button" size="sm" variant="ghost" className="h-6 px-2 text-[10px]" onClick={() => setAdding(false)}>Cancel</Button>
+                                    <Button type="submit" size="sm" className="h-6 px-2 text-[10px]" disabled={saving || !form.summary.trim()}>Log Meeting</Button>
+                                </div>
+                            </form>
+                        ) : (
+                            <button
+                                onClick={() => setAdding(true)}
+                                className="flex items-center gap-1 text-[11px] text-primary/60 hover:text-primary transition-colors"
+                            >
+                                <Plus className="h-3 w-3" /> Log Meeting
+                            </button>
+                        )
+                    )}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function BlockersSection({ sprint, project, can }: { sprint: Sprint; project: Project; can: any }) {
+    const incompleteTasks = sprint.tasks.filter(t => t.status !== 'completed').length;
+    const hasContent = incompleteTasks > 0 || sprint.completion_note;
+
+    const [open, setOpen] = useState(!!sprint.completion_note);
+    const [note, setNote] = useState(sprint.completion_note ?? '');
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+
+    if (!hasContent && !can.manage) return null;
+
+    const saveNote = () => {
+        setSaving(true);
+        router.patch(route('projects.sprints.save-note', [project.id, sprint.id]), { completion_note: note }, {
+            onSuccess: () => { setSaved(true); setTimeout(() => setSaved(false), 2000); },
+            onFinish: () => setSaving(false),
+        });
+    };
+
+    return (
+        <div className="border-t border-border/50">
+            <button
+                onClick={() => setOpen(!open)}
+                className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-muted/40 transition-colors text-left"
+            >
+                <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                    <AlertTriangle className={`h-3.5 w-3.5 ${incompleteTasks > 0 ? 'text-amber-500' : 'text-muted-foreground'}`} />
+                    Blockers &amp; Incomplete Reasons
+                    {incompleteTasks > 0 && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                            {incompleteTasks} incomplete
+                        </span>
+                    )}
+                </div>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? '' : '-rotate-90'}`} />
+            </button>
+
+            {open && (
+                <div className="px-4 pb-3 space-y-2 animate-in slide-in-from-top-1 duration-150">
+                    {!can.manage && !sprint.completion_note && (
+                        <p className="text-[11px] text-muted-foreground italic py-1">No blockers logged.</p>
+                    )}
+                    {can.manage ? (
+                        <div className="space-y-2">
+                            <textarea
+                                value={note}
+                                onChange={e => setNote(e.target.value)}
+                                placeholder="Log blockers, reasons for incomplete tasks, or any notes about what prevented completion..."
+                                rows={3}
+                                className="w-full text-xs bg-background border border-border rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                            />
+                            <div className="flex justify-end">
+                                <Button
+                                    size="sm"
+                                    variant={saved ? 'outline' : 'default'}
+                                    className={`h-6 px-3 text-[10px] ${saved ? 'text-green-600 border-green-300' : ''}`}
+                                    onClick={saveNote}
+                                    disabled={saving}
+                                >
+                                    {saved ? '✓ Saved' : saving ? 'Saving...' : 'Save Note'}
+                                </Button>
+                            </div>
+                        </div>
+                    ) : sprint.completion_note ? (
+                        <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-100 rounded-lg px-3 py-2 whitespace-pre-wrap">
+                            {sprint.completion_note}
+                        </p>
+                    ) : null}
+                </div>
+            )}
+        </div>
     );
 }
 

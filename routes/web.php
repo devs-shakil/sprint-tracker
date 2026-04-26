@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\MonthlyReportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectMemberController;
 use App\Http\Controllers\ProjectSprintController;
+use App\Http\Controllers\SprintGoalController;
+use App\Http\Controllers\SprintMeetingController;
 use App\Http\Controllers\SprintReportController;
 use App\Http\Controllers\TaskController;
 use Illuminate\Foundation\Application;
@@ -27,12 +30,23 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::post('projects/{project}/sprints', [ProjectSprintController::class, 'store'])->name('projects.sprints.store');
     Route::post('projects/{project}/sprints/single', [ProjectSprintController::class, 'storeSingle'])->name('projects.sprints.store-single');
     Route::patch('projects/{project}/sprints/{sprint}', [ProjectSprintController::class, 'update'])->name('projects.sprints.update');
+    Route::patch('projects/{project}/sprints/{sprint}/note', [ProjectSprintController::class, 'saveNote'])->name('projects.sprints.save-note');
     Route::post('projects/{project}/sprints/{sprint}/complete', [ProjectSprintController::class, 'complete'])->name('projects.sprints.complete');
     Route::delete('projects/{project}/sprints', [ProjectSprintController::class, 'destroy'])->name('projects.sprints.destroy');
+
+    // Sprint Goals
+    Route::post('projects/{project}/sprints/{sprint}/goals', [SprintGoalController::class, 'store'])->name('sprint-goals.store');
+    Route::patch('goals/{goal}/toggle', [SprintGoalController::class, 'toggle'])->name('sprint-goals.toggle');
+    Route::delete('goals/{goal}', [SprintGoalController::class, 'destroy'])->name('sprint-goals.destroy');
+
+    // Sprint Meetings
+    Route::post('projects/{project}/sprints/{sprint}/meetings', [SprintMeetingController::class, 'store'])->name('sprint-meetings.store');
+    Route::delete('meetings/{meeting}', [SprintMeetingController::class, 'destroy'])->name('sprint-meetings.destroy');
 
     // Report routes
     Route::get('projects/{project}/reports', [SprintReportController::class, 'projectReport'])->name('projects.reports.index');
     Route::get('projects/{project}/sprints/{sprint}/report', [SprintReportController::class, 'show'])->name('projects.sprints.report');
+    Route::get('projects/{project}/monthly-report', [MonthlyReportController::class, 'show'])->name('projects.monthly-report');
 
     // Task routes
     Route::get('projects/{project}/tasks', [TaskController::class, 'index'])->name('projects.tasks.index');

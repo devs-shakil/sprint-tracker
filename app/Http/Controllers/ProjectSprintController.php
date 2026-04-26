@@ -90,6 +90,23 @@ class ProjectSprintController extends Controller
         return back()->with('success', "Sprint {$sprint->sprint_number} dates updated.");
     }
 
+    public function saveNote(Request $request, Project $project, $sprintId)
+    {
+        if (auth()->id() !== $project->owner_id) {
+            abort(403);
+        }
+
+        $sprint = $project->sprints()->findOrFail($sprintId);
+
+        $validated = $request->validate([
+            'completion_note' => 'nullable|string|max:2000',
+        ]);
+
+        $sprint->update($validated);
+
+        return back();
+    }
+
     public function destroy(Project $project)
     {
         if (auth()->id() !== $project->owner_id) {

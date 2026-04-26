@@ -3,7 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
-import { Plus, Users, Calendar, ArrowRight } from 'lucide-react';
+import { Plus, Users, Calendar, ArrowRight, Target, TrendingUp } from 'lucide-react';
 
 interface Segment {
     id: number;
@@ -22,9 +22,18 @@ interface Task {
     status: string;
 }
 
+interface SprintGoal {
+    id: number;
+    is_completed: boolean;
+}
+
 interface Sprint {
     id: number;
+    sprint_number: number;
+    start_date: string;
+    end_date: string;
     tasks: Task[];
+    goals: SprintGoal[];
 }
 
 interface Project {
@@ -46,11 +55,17 @@ interface Props {
 }
 
 export default function Index({ projects, can }: Props) {
+    const today = new Date().toISOString().split('T')[0];
+
     const calculateProgress = (project: Project) => {
         const allTasks = project.sprints.flatMap(s => s.tasks);
         if (allTasks.length === 0) return 0;
         const completedTasks = allTasks.filter(t => t.status === 'completed').length;
         return Math.round((completedTasks / allTasks.length) * 100);
+    };
+
+    const getCurrentSprint = (project: Project) => {
+        return project.sprints.find(s => today >= s.start_date && today <= s.end_date) ?? null;
     };
 
     return (
@@ -109,24 +124,56 @@ export default function Index({ projects, can }: Props) {
                                                 {project.name}
                                             </CardTitle>
                                         </CardHeader>
-                                        <CardContent className="pt-4 space-y-6">
-                                            {/* Progress Section */}
+                                        <CardContent className="pt-4 space-y-4">
+                                            {/* Auto-Update: Current Sprint Status */}
+                                            {(() => {
+                                                const cur = getCurrentSprint(project);
+                                                if (!cur) return null;
+                                                const done = cur.tasks.filter(t => t.status === 'completed').length;
+                                                const total = cur.tasks.length;
+                                                const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                                                const goalsDone = cur.goals.filter(g => g.is_completed).length;
+                                                const goalsTotal = cur.goals.length;
+                                                return (
+                                                    <div className="bg-primary/5 border border-primary/10 rounded-lg px-3 py-2.5 space-y-1.5">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="text-[10px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                                                                <TrendingUp className="h-3 w-3" /> Sprint {cur.sprint_number} — This Week
+                                                            </span>
+                                                            <span className="text-[10px] font-bold text-primary">{pct}%</span>
+                                                        </div>
+                                                        <div className="w-full h-1.5 bg-primary/10 rounded-full overflow-hidden">
+                                                            <div className="h-full bg-primary transition-all duration-700" style={{ width: `${pct}%` }} />
+                                                        </div>
+                                                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                                            <span>{done}/{total} tasks done</span>
+                                                            {goalsTotal > 0 && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Target className="h-2.5 w-2.5" /> {goalsDone}/{goalsTotal} goals
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
+
+                                            {/* Overall Progress */}
                                             <div>
                                                 <div className="flex justify-between items-center text-xs mb-2">
                                                     <span className="font-semibold text-muted-foreground">Overall Progress</span>
                                                     <span className="font-bold text-primary">{progress}%</span>
                                                 </div>
                                                 <div className="w-full h-2 bg-muted rounded-full overflow-hidden border border-border/10">
-                                                    <div 
-                                                        className="h-full bg-primary transition-all duration-1000" 
+                                                    <div
+                                                        className="h-full bg-primary transition-all duration-1000"
                                                         style={{ width: `${progress}%` }}
                                                     />
                                                 </div>
                                             </div>
 
-                                            <div className="flex justify-end items-center pt-4 border-t border-border/50">
-                                                <Link 
-                                                    href={route('projects.show', project.id)} 
+                                            <div className="flex justify-end items-center pt-2 border-t border-border/50">
+                                                <Link
+                                                    href={route('projects.show', project.id)}
                                                     className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:gap-3 transition-all"
                                                 >
                                                     View Details <ArrowRight className="h-4 w-4" />
