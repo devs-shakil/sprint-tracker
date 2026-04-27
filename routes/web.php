@@ -33,7 +33,7 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::patch('projects/{project}/sprints/{sprint}', [ProjectSprintController::class, 'update'])->name('projects.sprints.update');
     Route::patch('projects/{project}/sprints/{sprint}/note', [ProjectSprintController::class, 'saveNote'])->name('projects.sprints.save-note');
     Route::post('projects/{project}/sprints/{sprint}/complete', [ProjectSprintController::class, 'complete'])->name('projects.sprints.complete');
-    Route::delete('projects/{project}/sprints', [ProjectSprintController::class, 'destroy'])->name('projects.sprints.destroy');
+    Route::delete('projects/{project}/sprints/{sprint}', [ProjectSprintController::class, 'destroy'])->name('projects.sprints.destroy');
 
     // Sprint Goals
     Route::post('projects/{project}/sprints/{sprint}/goals', [SprintGoalController::class, 'store'])->name('sprint-goals.store');

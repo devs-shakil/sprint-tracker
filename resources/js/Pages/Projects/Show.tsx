@@ -16,6 +16,12 @@ function isUrgent(dateStr: string): boolean {
     return d >= 0 && d <= 2;
 }
 
+function formatDate(dateStr: string): string {
+    const date = new Date(dateStr + 'T00:00:00');
+    const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
 interface Segment {
     id: number;
     name: string;
@@ -431,7 +437,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
     const overdue   = sprint.status !== 'completed' && endDays < 0;
 
     return (
-        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'bg-primary/5 border-2 border-primary shadow-lg animate-pulse-glow' : 'border-border/50 shadow-sm bg-gray-900'}`}>
+        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'bg-primary/5 border-2 border-primary shadow-lg pulse-glow' : 'border-border/50 shadow-sm bg-gray-900'}`}>
             <div
                 onClick={() => !isEditingDate && setIsOpen(!isOpen)}
                 className={`flex items-center justify-between px-5 cursor-pointer hover:bg-muted/50 transition-colors group ${isOpen ? 'rounded-t-lg' : 'rounded-lg'}`}
@@ -508,7 +514,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                         ) : (
                             <div className={`text-xs flex items-center gap-2 mt-1.5 ${overdue ? 'text-red-500' : endUrgent ? 'text-red-500' : 'text-muted-foreground'}`}>
                                 <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" /> {sprint.start_date} – {sprint.end_date}
+                                    <Calendar className="h-3 w-3" /> {formatDate(sprint.start_date)} – {formatDate(sprint.end_date)}
                                 </div>
                                 {can.manage && (
                                     <button
@@ -527,7 +533,22 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                     </div>
                 </div>
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
+                    {can.manage && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Are you sure you want to delete this sprint? This action cannot be undone.')) {
+                                    router.delete(route('projects.sprints.destroy', [project.id, sprint.id]));
+                                }
+                            }}
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    )}
                     <div className="flex gap-4 text-xs">
                         <div className="flex flex-col items-end">
                             <span className="text-muted-foreground uppercase text-[9px] font-bold tracking-widest">Progress</span>
@@ -550,7 +571,7 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm border-collapse min-w-[800px]">
                             <thead>
-                                <tr className="bg-muted text-muted-foreground uppercase text-sm tracking-wider font-bold border-b border-border/50">
+                                <tr className="bg-muted text-white uppercase text-sm tracking-wider font-bold border-b border-border/50 bg-primary/20">
                                     {project.segments.map((segment) => (
                                         <th key={segment.id} className="px-4 py-3 text-center border-r border-border/50 last:border-r-0">
                                             {segment.name}
@@ -559,11 +580,11 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
+                                <tr className=" space-x-2">
                                     {project.segments.map((segment) => {
                                         const sprintTasks = sprint.tasks?.filter(t => t.segment_id === segment.id) || [];
                                         return (
-                                            <td key={segment.id} className="p-3 border-r border-border/50 last:border-r-0 align-top min-w-[200px]">
+                                            <td key={segment.id} className="p-3 border-r  border-primary/30 last:border-r-0 align-top min-w-[200px] ">
                                                 <div className="space-y-3">
                                                     {sprintTasks.map((task) => (
                                                         <div 
@@ -685,10 +706,10 @@ function GoalsSection({ sprint, project, can }: { sprint: Sprint; project: Proje
     };
 
     return (
-        <div className="border-t border-border/50 border-l-4 border-l-violet-400">
+        <div className="border-t border-border/50 border-l-4 border-l-violet-400   shadow-lg rounded-md">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between px-4 py-3 hover:bg-violet-500/10 transition-colors text-left bg-gradient-to-r from-violet-500/10 to-transparent"
+                className="w-full flex items-center justify-between px-4 py-3 hover:bg-violet-500/10 transition-colors text-left bg-gradient-to-r from-violet-500/10 to-transparent shadow-lg"
             >
                 <div className="flex items-center gap-2.5 text-xs font-bold text-foreground uppercase tracking-wider">
                     <div className="w-6 h-6 rounded-lg bg-violet-500/20 flex items-center justify-center shrink-0">
@@ -778,7 +799,7 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
     };
 
     return (
-        <div className="border-t border-border/50 border-l-4 border-l-blue-400">
+        <div className="border-t border-border/50 border-l-4 border-l-blue-400 mt-2 shadow-lg rounded-md">
             <button
                 onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-500/10 transition-colors text-left bg-gradient-to-r from-blue-500/10 to-transparent"
@@ -809,7 +830,7 @@ function MeetingSection({ sprint, project, can }: { sprint: Sprint; project: Pro
                         <div key={meeting.id} className="bg-card border border-border/60 border-l-2 border-l-blue-400 rounded-lg p-3 space-y-1.5 group relative shadow-sm">
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] font-bold text-blue-300 uppercase tracking-wider flex items-center gap-1.5 bg-blue-500/20 px-2 py-0.5 rounded-full">
-                                    <Calendar className="h-3 w-3" /> {meeting.meeting_date}
+                                    <Calendar className="h-3 w-3" /> {formatDate(meeting.meeting_date)}
                                 </span>
                                 {can.manage && (
                                     <button
@@ -908,7 +929,7 @@ function BlockersSection({ sprint, project, can }: { sprint: Sprint; project: Pr
     };
 
     return (
-        <div className="border-t border-border/50 border-l-4 border-l-amber-400">
+        <div className="border-t border-border/50 border-l-4 border-l-amber-400 mt-2 shadow-lg rounded-md">
             <button
                 onClick={() => setOpen(!open)}
                 className="w-full flex items-center justify-between px-4 py-3 hover:bg-amber-500/10 transition-colors text-left bg-gradient-to-r from-amber-500/10 to-transparent"
@@ -1108,7 +1129,7 @@ function QuickAddTask({ projectId, segmentId, sprintId }: { projectId: number, s
             <div className="space-y-1">
                 <textarea
                     autoFocus
-                    className="w-full bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground resize-none min-h-[1.5rem]"
+                    className="w-full bg-transparent border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-muted-foreground resize-none min-h-[3rem] "
                     placeholder="Enter task(s)... (Paste multiple lines for bulk)"
                     value={data.title}
                     onChange={e => {

@@ -107,14 +107,15 @@ class ProjectSprintController extends Controller
         return back();
     }
 
-    public function destroy(Project $project)
+    public function destroy(Project $project, Sprint $sprint)
     {
         if (auth()->id() !== $project->owner_id) {
             abort(403);
         }
 
-        $project->sprints()->delete();
+        $sprintNumber = $sprint->sprint_number;
+        $sprint->delete();
 
-        return back()->with('success', 'Sprints cleared.');
+        return back()->with('success', "Sprint {$sprintNumber} deleted.");
     }
 }

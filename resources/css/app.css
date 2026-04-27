@@ -63,4 +63,17 @@
   .deadline-urgent {
     animation: pulse-red 1.5s ease-in-out infinite;
   }
+  
+  .pulse-glow {
+    animation: pulse-animation 2s infinite;
+  }
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0px rgba(53, 133, 142, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(53, 133, 142, 0);
+  }
 }
