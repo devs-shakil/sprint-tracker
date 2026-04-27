@@ -39,7 +39,7 @@ export default function Login({
                 </div>
             )}
 
-            <Card className="w-full max-w-md mx-auto">
+            <Card className="w-full max-w-md mx-auto ">
                 <CardHeader>
                     <CardTitle>Welcome Back</CardTitle>
                     <CardDescription>Log in to access your sprint overview.</CardDescription>

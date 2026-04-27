@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
 import { Label } from '@/Components/ui/label';
-import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText, GitCommit as GitIcon, Copy, ExternalLink, Github, Gitlab, Target, MessageSquare, AlertTriangle, Minus, BarChart3, LayoutList } from 'lucide-react';
+import { Users, Calendar, ArrowLeft, Trash2, UserPlus, Plus, Clock, CheckCircle2, ChevronDown, ChevronRight, Edit2, Check, X, FileText, GitCommit as GitIcon, Copy, ExternalLink, Github, Gitlab, Target, MessageSquare, AlertTriangle, Minus, BarChart3, LayoutList, Layers } from 'lucide-react';
 import { useState } from 'react';
 import InputError from '@/Components/InputError';
 
@@ -143,6 +143,11 @@ export default function Show({ project, developers, can }: Props) {
                     <div className="flex items-center gap-3">
                         {can.manage && (
                             <>
+                                <Button variant="outline" className="border-primary/20 hover:bg-primary/5" asChild>
+                                    <Link href={route('projects.timeline', project.id)} className="flex items-center">
+                                        <Layers className="mr-2 h-4 w-4 text-primary" /> Timeline
+                                    </Link>
+                                </Button>
                                 <Button variant="outline" className="border-primary/20 hover:bg-primary/5" asChild>
                                     <Link href={route('projects.monthly-report', project.id)} className="flex items-center">
                                         <BarChart3 className="mr-2 h-4 w-4 text-primary" /> Monthly Report
@@ -303,14 +308,14 @@ export default function Show({ project, developers, can }: Props) {
                                     >
                                         Distribute Tasks
                                     </Button> */}
-                                    <Button 
+                                    {/* <Button 
                                         variant="default" 
                                         size="sm"
                                         onClick={() => router.post(route('projects.sprints.store-single', project.id))}
                                         className="bg-primary hover:bg-primary/90"
                                     >
                                         <Plus className="h-4 w-4 mr-1" /> New Sprint
-                                    </Button>
+                                    </Button> */}
                                 </div>
                             )}
                         </CardHeader>
@@ -426,10 +431,10 @@ function SprintAccordion({ sprint, project, can, isDefaultOpen = false, isCurren
     const overdue   = sprint.status !== 'completed' && endDays < 0;
 
     return (
-        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'border-2 border-primary shadow-lg animate-pulse-glow' : 'border-border/50 shadow-sm'}`}>
+        <Card className={`overflow-hidden transition-all duration-300 ${isCurrent ? 'bg-primary/5 border-2 border-primary shadow-lg animate-pulse-glow' : 'border-border/50 shadow-sm bg-gray-900'}`}>
             <div
                 onClick={() => !isEditingDate && setIsOpen(!isOpen)}
-                className={`flex items-center justify-between px-5 py-5 cursor-pointer hover:bg-muted/50 transition-colors group ${isCurrent ? 'bg-primary/5' : 'bg-muted/30'}`}
+                className={`flex items-center justify-between px-5 cursor-pointer hover:bg-muted/50 transition-colors group ${isOpen ? 'rounded-t-lg' : 'rounded-lg'}`}
             >
                 <div className="flex items-center gap-4">
                     <div className={`${isCurrent ? 'bg-primary text-white' : 'bg-primary/10 text-primary'} p-2.5 rounded-xl transition-colors`}>
@@ -1001,7 +1006,7 @@ function GitAccordion({ project }: { project: Project }) {
                                 <div className="flex-1 bg-background border rounded-lg px-3 py-2.5 text-xs font-mono truncate select-all shadow-sm">
                                     {window.location.origin}/api/webhook/gitlab/{project.id}
                                 </div>
-                                <Button 
+                                {/* <Button 
                                     variant="outline" 
                                     size="icon" 
                                     className="h-10 w-10 shrink-0 hover:bg-primary hover:text-white transition-all"
@@ -1012,7 +1017,7 @@ function GitAccordion({ project }: { project: Project }) {
                                     }}
                                 >
                                     <Copy className="h-4 w-4" />
-                                </Button>
+                                </Button> */}
                             </div>
                         </div>
                         <div className="space-y-3">

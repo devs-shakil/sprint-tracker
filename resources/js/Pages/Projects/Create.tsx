@@ -55,9 +55,9 @@ export default function Create() {
         >
             <Head title="Create Project" />
 
-            <div className="py-12">
-                <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
-                    <Card>
+            <div className="py-12 ">
+                <div className="max-w-3xl mx-auto sm:px-6 lg:px-8 ">
+                    <Card className='bg-gray-900 shadow-lg py-4'>
                         <CardHeader>
                             <CardTitle>Project Details</CardTitle>
                             <CardDescription>
