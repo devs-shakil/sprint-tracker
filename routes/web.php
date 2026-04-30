@@ -56,6 +56,7 @@ Route::middleware(['auth', 'verified', 'role:owner'])->group(function () {
     Route::post('projects/{project}/timeline/segments/{segment}/tasks', [ProjectTimelineController::class, 'storeTask'])->name('projects.timeline.tasks.store');
     Route::patch('timeline-tasks/{task}/status', [ProjectTimelineController::class, 'updateTaskStatus'])->name('timeline-tasks.update-status');
     Route::patch('timeline-tasks/{task}/confirmation', [ProjectTimelineController::class, 'updateTaskConfirmation'])->name('timeline-tasks.update-confirmation');
+    Route::delete('timeline-tasks/{task}', [ProjectTimelineController::class, 'destroy'])->name('timeline-tasks.destroy');
 
     // Task routes
     Route::get('projects/{project}/tasks', [TaskController::class, 'index'])->name('projects.tasks.index');

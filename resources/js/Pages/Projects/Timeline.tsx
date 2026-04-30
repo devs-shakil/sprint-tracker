@@ -4,7 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import {
     ArrowLeft, Printer, Plus, ChevronDown, ChevronRight,
-    CheckCircle2, Clock, AlertCircle, LayoutList, StickyNote,
+    CheckCircle2, Clock, AlertCircle, LayoutList, StickyNote, Trash2,
 } from 'lucide-react';
 
 interface TimelineTask {
@@ -83,7 +83,7 @@ function SegmentBlock({ segment, colorIdx, project }: SegmentBlockProps) {
     const [note, setNote] = useState(segment.note ?? '');
     const [addingTask, setAddingTask] = useState(false);
     const [newTask, setNewTask] = useState('');
-    const taskInputRef = useRef<HTMLInputElement>(null);
+    const taskInputRef = useRef<HTMLTextAreaElement>(null);
 
     const doneCount = segment.tasks.filter(t => t.status === 'Done').length;
     const totalCount = segment.tasks.length;
@@ -143,9 +143,10 @@ function SegmentBlock({ segment, colorIdx, project }: SegmentBlockProps) {
                     <table className="w-full text-sm border-collapse">
                         <thead>
                             <tr className="bg-muted/50 text-muted-foreground text-xs uppercase tracking-wider border-b border-border/50">
-                                <th className="px-5 py-3 text-left w-[56%]">Task Name</th>
-                                <th className="px-5 py-3 text-center w-[22%]">Status</th>
-                                <th className="px-5 py-3 text-center w-[22%]">Client Confirmation</th>
+                                <th className="px-5 py-3 text-left w-[48%]">Task Name</th>
+                                <th className="px-5 py-3 text-center w-[20%]">Status</th>
+                                <th className="px-5 py-3 text-center w-[20%]">Client Confirmation</th>
+                                <th className="px-5 py-3 text-center w-[12%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border/30">
@@ -196,6 +197,20 @@ function SegmentBlock({ segment, colorIdx, project }: SegmentBlockProps) {
                                             {task.client_confirmation}
                                         </button>
                                     </td>
+                                    <td className="px-5 py-3 text-center">
+                                        <button
+                                            onClick={() => {
+                                                if (!window.confirm('Delete this timeline task?')) {
+                                                    return;
+                                                }
+                                                router.delete(route('timeline-tasks.destroy', task.id), { preserveScroll: true });
+                                            }}
+                                            title="Delete task"
+                                            className="inline-flex items-center justify-center p-2 rounded-full border text-xs text-red-400 border-red-400/30 hover:bg-red-500/10 transition-all"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -204,22 +219,24 @@ function SegmentBlock({ segment, colorIdx, project }: SegmentBlockProps) {
                     {/* Add Task Row */}
                     <div className="px-5 py-3 border-t border-border/30 bg-muted/5 print:hidden">
                         {addingTask ? (
-                            <form onSubmit={submitTask} className="flex items-center gap-2">
-                                <input
+                            <form onSubmit={submitTask} className="space-y-2">
+                                <textarea
                                     ref={taskInputRef}
                                     autoFocus
                                     value={newTask}
                                     onChange={e => setNewTask(e.target.value)}
-                                    placeholder="Task name..."
-                                    className="flex-1 text-sm bg-background border border-border/60 rounded-lg
-                                               px-3 py-1.5 text-foreground placeholder:text-muted-foreground
-                                               focus:outline-none focus:ring-1 focus:ring-primary/50"
+                                    placeholder="Enter one task per line..."
+                                    rows={3}
+                                    className="w-full text-sm bg-background border border-border/60 rounded-lg px-3 py-2 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/50"
                                 />
-                                <Button type="submit" size="sm" className="h-8 text-xs">Add</Button>
-                                <Button type="button" size="sm" variant="ghost" className="h-8 text-xs"
-                                        onClick={() => { setAddingTask(false); setNewTask(''); }}>
-                                    Cancel
-                                </Button>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button type="submit" size="sm" className="h-8 text-xs">Add</Button>
+                                    <Button type="button" size="sm" variant="ghost" className="h-8 text-xs"
+                                            onClick={() => { setAddingTask(false); setNewTask(''); }}>
+                                        Cancel
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground italic">Paste multiple lines to create separate tasks.</p>
+                                </div>
                             </form>
                         ) : (
                             <button

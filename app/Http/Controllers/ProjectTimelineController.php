@@ -43,12 +43,23 @@ class ProjectTimelineController extends Controller
 
     public function storeTask(Request $request, Project $project, ProjectTimelineSegment $segment)
     {
-        $r = $request->validate(['name' => 'required|string|max:500']);
+        $r = $request->validate(['name' => 'required|string|max:2000']);
+        $titles = array_filter(array_map('trim', explode("\n", $r['name'])));
         $order = $segment->tasks()->count();
-        $segment->tasks()->create([
-            'name'  => trim($r['name']),
-            'order' => $order,
-        ]);
+
+        foreach ($titles as $title) {
+            $segment->tasks()->create([
+                'name'  => $title,
+                'order' => $order++,
+            ]);
+        }
+
+        return back();
+    }
+
+    public function destroy(ProjectTimelineTask $task)
+    {
+        $task->delete();
         return back();
     }
 

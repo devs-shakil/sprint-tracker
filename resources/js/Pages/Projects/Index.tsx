@@ -119,10 +119,10 @@ export default function Index({ projects, can }: Props) {
                                 return (
                                     <div
                                         key={project.id}
-                                        className="group bg-background border border-border/60 rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
+                                        className="group bg-black/50 border border-border/60 rounded-xl overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col"
                                     >
                                         {/* Coloured top stripe */}
-                                        <div className={`h-1.5 w-full ${isCompleted ? 'bg-green-400' : isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                                        {/* <div className={`h-1.5 w-full ${isCompleted ? 'bg-green-400' : isActive ? 'bg-primary' : 'bg-muted-foreground/30'}`} /> */}
 
                                         {/* Header */}
                                         <div className="px-5 pt-5 pb-3">
